@@ -68,6 +68,21 @@ kbd{background:var(--soft);border-radius:6px;padding:1px 6px;font:700 .85em ui-m
     <p class="muted" style="margin-top:10px">Use it: on a product page in Safari, tap Share, then <b>Wishlist (this page)</b>. The first time, iPhone asks to let the shortcut run on this website. Choose <b>Always Allow</b>.</p>
   </div>
 
+  <div class="card">
+    <h2>iPhone: Shortcut 3, for stubborn shops from any app (like the Google app)</h2>
+    <p class="muted">Your phone downloads the page itself, the way it would if you opened it, and hands it to the wishlist to read. It works from any app's Share menu. Set it up after Shortcut 1 and try it on a Zara link.</p>
+    <ol>
+      <li>In Shortcuts, tap <b>+</b> and name it <b>Wishlist (deep)</b>. Tap the <b>i</b>, turn on <b>Show in Share Sheet</b>, and leave only <b>URLs</b> and <b>Text</b> ticked.</li>
+      <li>Add the action <b>Get URLs from Input</b>.</li>
+      <li>Add the action <b>Get Contents of URL</b> and set its URL to the <span class="pill">URLs</span> variable. Tap <b>Show More</b>, keep the method as <b>GET</b>, then under <b>Headers</b> tap <b>Add new header</b>: the key is <b>User-Agent</b> and the value is what <b>Copy the browser name</b> below copies.</li>
+      <li>Add a second <b>Get Contents of URL</b>. Tap <b>Copy the helper address</b> below and paste it as its URL. Tap <b>Show More</b>, set the method to <b>POST</b> and the request body to <b>JSON</b>. Add a <b>Text</b> field with the key <b>url</b> and the value <span class="pill">URLs</span>. Add another <b>Text</b> field with the key <b>html</b> and the value <span class="pill">Contents of URL</span>, choosing the one from the first Get Contents of URL.</li>
+      <li>Add the action <b>Open URLs</b>. Its input should be the <span class="pill">Contents of URL</span> from the second Get Contents of URL.</li>
+      <li>Tap <b>Done</b>.</li>
+    </ol>
+    <div class="copyrow"><button class="btn ghost" type="button" id="copyUa">Copy the browser name</button><span class="ok" id="copiedUa" hidden>Copied</span><button class="btn ghost" type="button" id="copyGo">Copy the helper address</button><span class="ok" id="copiedGo" hidden>Copied</span></div>
+    <p class="muted" style="margin-top:10px">It can take a few seconds. If the wishlist opens with only a name, that shop wouldn't hand the page over. Open the item in Safari instead and use Shortcut 2.</p>
+  </div>
+
   <p class="muted">When the wishlist can't get the price or photo, it still saves the item and marks it <b>Add price &amp; photo</b> so nothing is lost. On a computer, use the <a href="add-button.html">Add button</a>. <a href="./">Back to the wishlist</a></p>
 </main>
 <script>
@@ -85,6 +100,8 @@ kbd{background:var(--soft);border-radius:6px;padding:1px 6px;font:700 .85em ui-m
   }
   wire('copyStart', start, 'copiedStart');
   wire('copyCode', code, 'copiedCode');
+  wire('copyUa', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', 'copiedUa');
+  wire('copyGo', 'https://wishlist-fetch.avacbrooks.workers.dev/go', 'copiedGo');
 })();
 </script>
 </body>
