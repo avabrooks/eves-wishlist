@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Share to Wishlist - Eve's Wishlist</title>
+<meta name="theme-color" content="#C93D75">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,600&family=Nunito:wght@400;700;800&display=swap">
+<style>
+:root{--bg:#FFF4F6;--card:#fff;--ink:#432636;--ink-2:#7A5768;--line:#F4D9E2;--accent:#C93D75;--accent-ink:#fff;--soft:#FFDDE8;--mint:#D3F4E5;--mint-ink:#17694D;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#241A21;--card:#33262F;--ink:#FBE9F0;--ink-2:#C9A9B8;--line:#4A3642;--accent:#F58AB3;--accent-ink:#2A1520;--soft:#54293C;--mint:#1F4A3C;--mint-ink:#9BE6C6;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Nunito",ui-rounded,system-ui,sans-serif;padding:24px 16px calc(64px + env(safe-area-inset-bottom,0px))}
+main{max-width:640px;margin:0 auto;display:grid;gap:22px}
+h1{font:italic 600 clamp(2rem,7vw,2.6rem)/1.05 "Fraunces",Georgia,serif;margin:0;letter-spacing:-.02em}
+h2{font-size:1.05rem;margin:0 0 8px}
+p{margin:0}
+.muted{color:var(--ink-2)}
+a{color:var(--accent)}
+.btn{display:inline-block;border:0;border-radius:999px;padding:12px 22px;font:800 1rem "Nunito",sans-serif;background:var(--accent);color:var(--accent-ink);text-decoration:none;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:22px;padding:18px 20px}
+ol{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px}
+.drag{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px}
+.ok{background:var(--mint);color:var(--mint-ink);border-radius:12px;padding:8px 12px;font-weight:700;font-size:.9rem}
+textarea{width:100%;height:110px;margin-top:10px;font:12px/1.4 ui-monospace,Menlo,monospace;border:1.5px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);color:var(--ink)}
+details summary{cursor:pointer;color:var(--ink-2);font-weight:700;margin-top:12px}
+kbd{background:var(--soft);border-radius:6px;padding:1px 6px;font:700 .85em ui-monospace,Menlo,monospace}
+.step{display:grid;gap:8px}.pill{display:inline-block;background:var(--soft);border-radius:8px;padding:1px 8px;font-weight:800;font-size:.9em}.copyrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}code.url{display:block;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font:12px/1.4 ui-monospace,Menlo,monospace;word-break:break-all;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <h1>Share to Wishlist</h1>
+    <p class="muted" style="margin-top:8px">On your iPhone, find something in any app or website, tap <b>Share</b>, then tap <b>Wishlist</b>. The wishlist opens with it already filled in.</p>
+  </div>
+
+  <div class="card">
+    <h2>iPhone: Shortcut 1, works in every app</h2>
+    <p class="muted">Set this up once. It goes in the Share menu of Safari, Chrome, Instagram, the Zara app and the rest.</p>
+    <ol>
+      <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, and name it <b>Wishlist</b>.</li>
+      <li>Tap the <b>i</b> (or the name at the top), turn on <b>Show in Share Sheet</b>, and under <b>Share Sheet Types</b> leave only <b>URLs</b> and <b>Text</b> ticked.</li>
+      <li>Add the action <b>URL Encode</b> (search "encode"). Leave its input as <span class="pill">Shortcut Input</span>.</li>
+      <li>Add the action <b>Text</b>. Tap <b>Copy the address start</b> below, paste it into the Text box, then tap after it and add the variable <span class="pill">URL Encoded Text</span>.</li>
+      <li>Add the action <b>Open URLs</b>. Its input should be the <span class="pill">Text</span> from the step before.</li>
+      <li>Tap <b>Done</b>.</li>
+    </ol>
+    <div class="copyrow"><button class="btn ghost" type="button" id="copyStart">Copy the address start</button><span class="ok" id="copiedStart" hidden>Copied</span></div>
+    <code class="url" id="startText"></code>
+    <p class="muted" style="margin-top:10px">Try it: open a product, tap Share, scroll to <b>Wishlist</b> (tap <b>Edit Actions</b> to pin it near the top). The wishlist opens in Safari. Sign in with Google once there and it will stay signed in.</p>
+  </div>
+
+  <div class="card">
+    <h2>iPhone: Shortcut 2, for shops that block lookups (Safari only)</h2>
+    <p class="muted">Shops like Zara refuse automatic lookups. This one reads the page you're already looking at in Safari, so it works on any shop.</p>
+    <ol>
+      <li>In Shortcuts, tap <b>+</b> and name it <b>Wishlist (this page)</b>.</li>
+      <li>Tap the <b>i</b>, turn on <b>Show in Share Sheet</b>, and under <b>Share Sheet Types</b> leave only <b>Safari web pages</b> ticked.</li>
+      <li>Add the action <b>Run JavaScript on Web Page</b>. Tap <b>Copy the page reader</b> below, then clear the sample code in the box and paste.</li>
+      <li>Add the action <b>Open URLs</b>. Its input should be the <span class="pill">JavaScript Result</span> from the step before.</li>
+      <li>Tap <b>Done</b>.</li>
+    </ol>
+    <div class="copyrow"><button class="btn ghost" type="button" id="copyCode">Copy the page reader</button><span class="ok" id="copiedCode" hidden>Copied</span></div>
+    <details><summary>Show the code</summary><textarea id="codeBox" readonly></textarea></details>
+    <p class="muted" style="margin-top:10px">Use it: on a product page in Safari, tap Share, then <b>Wishlist (this page)</b>. The first time, iPhone asks to let the shortcut run on this website. Choose <b>Always Allow</b>.</p>
+  </div>
+
+  <p class="muted">When the wishlist can't get the price or photo, it still saves the item and marks it <b>Add price &amp; photo</b> so nothing is lost. On a computer, use the <a href="add-button.html">Add button</a>. <a href="./">Back to the wishlist</a></p>
+</main>
+<script>
+(function(){
+  var code = "!function(){var e=document;function t(t){return e.querySelector(t)}function r(e){var r=t('meta[property=\"'+e+'\"],meta[name=\"'+e+'\"],meta[itemprop=\"'+e+'\"]');return r&&r.getAttribute(\"content\")||\"\"}function n(e){return(e||\"\").replace(/\\s+/g,\" \").trim()}var i=[];function a(e,t){!e||t>6||(Array.isArray(e)?e.forEach(function(e){a(e,t+1)}):\"object\"==typeof e&&(i.push(e),[\"@graph\",\"hasVariant\",\"mainEntity\"].forEach(function(r){e[r]&&a(e[r],t+1)})))}function o(e){var t=e[\"@type\"];return(t=Array.isArray(t)?t:[t]).indexOf(\"Product\")>-1||t.indexOf(\"ProductGroup\")>-1}[].forEach.call(e.querySelectorAll('script[type=\"application/ld+json\"]'),function(e){try{a(JSON.parse(e.textContent),0)}catch(e){}});var l=i.filter(function(e){return o(e)&&e.name})[0]||i.filter(o)[0]||null;function c(e){if(!e)return null;if(Array.isArray(e)){for(var t=0;t<e.length;t++){var r=c(e[t]);if(r)return r}return null}if(\"object\"!=typeof e)return null;var n=Array.isArray(e.priceSpecification)?e.priceSpecification[0]:e.priceSpecification,i=null!=e.price?e.price:null!=e.lowPrice?e.lowPrice:n?n.price:null;return null==i||\"\"===i?e.offers?c(e.offers):null:{p:i,c:e.priceCurrency||n&&n.priceCurrency||\"\"}}function u(e){if(null==e)return null;if(\"number\"==typeof e)return e>0&&e<1e6?Math.round(100*e)/100:null;var t=String(e).match(/\\d[\\d.,]*/);if(!t)return null;var r=t[0].replace(/[.,]+$/,\"\"),n=r.indexOf(\",\")>-1,i=r.indexOf(\".\")>-1;if(n&&i){var a=r.lastIndexOf(\",\")>r.lastIndexOf(\".\")?\",\":\".\";r=r.split(\",\"===a?\".\":\",\").join(\"\").replace(a,\".\")}else n?r=/,\\d{1,2}$/.test(r)&&2===r.split(\",\").length?r.replace(\",\",\".\"):r.split(\",\").join(\"\"):i&&r.split(\".\").length>2&&(r=r.split(\".\").join(\"\"));var o=parseFloat(r);return isFinite(o)&&o>0&&o<1e6?Math.round(100*o)/100:null}var f=/(?:[$\\xa3\\u20ac\\xa5\\u20b9]|USD|EUR|GBP|CAD|AUD)\\s?\\d[\\d.,]*|\\d[\\d.,]*\\s?(?:[$\\xa3\\u20ac]|USD|EUR|GBP)/;function s(e){var t=e.getBoundingClientRect();if(!t.width||!t.height)return!1;var r=getComputedStyle(e);return\"hidden\"!==r.visibility&&\"none\"!==r.display}function p(t){for(var r=0,n=t;n&&n!==e.body&&r<4;n=n.parentElement,r++){if(/^(DEL|S|STRIKE)$/.test(n.tagName))return!0;var i=getComputedStyle(n);if((i.textDecorationLine||i.textDecoration||\"\").indexOf(\"line-through\")>-1)return!0;var a=\"string\"==typeof n.className?n.className:\"\";if(/(^|[\\s_-])(old|was|compare|original|before|strike|strikethrough|crossed|previous|msrp|regular|list)([\\s_-]|$)/i.test(a))return!0}return!1}function g(e){if(!e)return\"\";try{var t=new URL(e,location.href);return/^https?:$/.test(t.protocol)?t.href:\"\"}catch(e){return\"\"}}var d=l?c(l.offers)||(l.hasVariant?c((Array.isArray(l.hasVariant)?l.hasVariant[0]:l.hasVariant).offers):null):null,h=d?u(d.p):null,v=d?String(d.c||\"\").toUpperCase():\"\";if(null==h){var y=u(r(\"product:price:amount\")||r(\"og:price:amount\")||r(\"price\"));null!=y&&(h=y,v=String(r(\"product:price:currency\")||r(\"og:price:currency\")||\"\").toUpperCase())}if(null==h){var m=function(){var t=null,r=-1,i=0;if([].forEach.call(e.querySelectorAll('[itemprop=price],[class*=\"price\" i],[data-testid*=\"price\" i],[data-qa*=\"price\" i],[id*=\"price\" i]'),function(e){i++;var a=function(e){var t=\"\";return function e(r){for(var n=r.firstChild;n;n=n.nextSibling)3===n.nodeType?t+=n.nodeValue:1!==n.nodeType||/^(SCRIPT|STYLE|NOSCRIPT)$/.test(n.tagName)||p(n)||e(n)}(e),n(t)}(e);if(a&&!(a.length>60)&&f.test(a)&&s(e)&&!p(e)){var o=e.getBoundingClientRect().top+(window.pageYOffset||0);if(!(o>2600)){var l=(\"string\"==typeof e.className?e.className:\"\")+\" \"+(e.getAttribute(\"data-testid\")||\"\")+\" \"+(e.getAttribute(\"data-qa\")||\"\"),c=10-.1*Math.min(i,9)+(/(sale|current|now|final|special|discount|offer)/i.test(l)?3:0)+(o<1400?1:0);c>r&&(t=a,r=c)}}}),t)return t;for(var a,o=e.createTreeWalker(e.body,NodeFilter.SHOW_TEXT),l=0;(a=o.nextNode())&&l<4e3;){l++;var c=n(a.nodeValue);if(c&&!(c.length>40)&&f.test(c)){var u=a.parentElement;if(u&&!/^(SCRIPT|STYLE|NOSCRIPT)$/.test(u.tagName)&&s(u)&&!p(u)&&!(u.getBoundingClientRect().top+(window.pageYOffset||0)>2200))return c}}return\"\"}();if(m){h=u(m);var S=m.match(/[\\xa3\\u20ac\\xa5\\u20b9]/);S&&(v={$:\"\",\"\\xa3\":\"GBP\",\"\\u20ac\":\"EUR\",\"\\xa5\":\"JPY\",\"\\u20b9\":\"INR\"}[S[0]]);var C=m.match(/\\b(USD|EUR|GBP|CAD|AUD)\\b/);C&&(v=C[1])}}var w,A,E=t(\"h1\"),b=n((w=l&&l.name,(A=e.createElement(\"textarea\")).innerHTML=String(w||\"\"),A.value||r(\"og:title\")||E&&E.textContent||e.title)),x=location.hostname.replace(/^www\\./,\"\").split(\".\")[0].toLowerCase(),O=b.split(/\\s+[|\\u2013\\u2014\\xb7-]\\s+/);if(O.length>1){var R=O.filter(function(e){var t=e.toLowerCase().replace(/[^a-z0-9]/g,\"\");return!(x.length>2&&t.indexOf(x)>-1&&t.length<=x.length+12)});R.length&&(b=R.join(\" - \"))}for(var N,T,P=g(function e(t){if(!t)return\"\";if(\"string\"==typeof t)return t;if(Array.isArray(t)){for(var r=0;r<t.length;r++){var n=e(t[r]);if(n)return n}return\"\"}return e(t.url||t.contentUrl||t.name)}(l&&l.image)||r(\"og:image\")||r(\"twitter:image\"))||g((N=null,T=0,[].forEach.call(e.images,function(e){var t=e.getBoundingClientRect();if(!(t.width<180||t.height<180)&&s(e)&&!(t.top+(window.pageYOffset||0)>1800)){var r=t.width*t.height;r>T&&(T=r,N=e)}}),N?N.currentSrc||N.src:\"\")),U=l&&\"string\"==typeof l.color?n(l.color):\"\",$={u:location.href.split(\"#\")[0],t:b.slice(0,140),p:h,i:P.slice(0,900),c:U.slice(0,30),k:v},D=(new TextEncoder).encode(JSON.stringify($)),B=\"\",I=0;I<D.length;I++)B+=String.fromCharCode(D[I]);var L=btoa(B).replace(/\\+/g,\"-\").replace(/\\//g,\"_\").replace(/=+$/,\"\");completion(\"https://avabrooks.github.io/eves-wishlist/#add=\"+L)}();";
+  var start = "https://avabrooks.github.io/eves-wishlist/#link=";
+  document.getElementById('codeBox').value = code;
+  document.getElementById('startText').textContent = start;
+  function wire(btn, text, done){
+    document.getElementById(btn).addEventListener('click', function(){
+      var ok = function(){ document.getElementById(done).hidden = false; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fb); else fb();
+      function fb(){ var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.focus(); t.select(); try { if (document.execCommand('copy')) ok(); } catch(e){} t.remove(); }
+    });
+  }
+  wire('copyStart', start, 'copiedStart');
+  wire('copyCode', code, 'copiedCode');
+})();
+</script>
+</body>
+</html>

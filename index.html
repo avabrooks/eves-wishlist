@@ -146,6 +146,8 @@ button.tag{cursor:pointer}
 .tag.need{background:var(--accent-soft);color:var(--accent-soft-ink)}
 .tag.want{background:var(--lav);color:var(--lav-ink)}
 .tag.dream{background:var(--sky);color:var(--sky-ink)}
+.tag.todo{background:var(--butter);color:var(--butter-ink)}
+button.tag.todo:hover{filter:brightness(.96)}
 .notes{margin:0;color:var(--ink-2);font-size:.88rem;overflow-wrap:anywhere}
 .foot{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;margin-top:2px}
 .when{font-size:.82rem;font-weight:800;border-radius:999px;padding:4px 11px;background:var(--butter);color:var(--butter-ink)}
@@ -298,10 +300,11 @@ img{max-width:100%}
       <label for="f-url" id="urlLabel">Link to the store</label>
       <div class="lk-row">
         <input class="inp" id="f-url" type="url" inputmode="url" placeholder="Paste the product link">
+        <button class="btn ghost small" type="button" id="pasteBtn" hidden>Paste</button>
         <button class="btn small" type="button" id="lookupBtn" hidden>Fill it in</button>
       </div>
       <p class="status" id="lookupStatus" role="status" aria-live="polite" hidden></p>
-      <p class="hint" id="btnHint" hidden>Some shops hide their pages from lookups. The <a href="add-button.html" target="_blank" rel="noopener">Add button</a> fills everything in from the page you're looking at.</p>
+      <p class="hint" id="btnHint" hidden>Some shops hide their pages from lookups. You can save it anyway and it will be marked so you can finish it later. For one-tap adding, use the <a href="iphone-share.html" target="_blank" rel="noopener">phone Share button</a> or the <a href="add-button.html" target="_blank" rel="noopener">Add button</a> on a computer.</p>
       <details class="tech" id="lookupDebug" hidden><summary>Technical details</summary><pre id="lookupDebugText"></pre></details>
     </div>
     <div class="field">
@@ -588,6 +591,10 @@ function metaTags(it, interactive){
   if (it.category) out += '<span class="tag">' + esc(it.category) + '</span>';
   if (it.size) out += '<span class="tag">Size ' + esc(it.size) + '</span>';
   if (it.color) out += '<span class="tag">' + esc(it.color) + '</span>';
+  if (interactive && safeUrl(it.url)) {
+    const gap = [Number(it.price) > 0 ? '' : 'price', safeImg(it.image) ? '' : 'photo'].filter(Boolean).join(' & ');
+    if (gap) out += '<button type="button" class="tag todo" data-act="finish" title="Tap to look it up again or type it in">Add ' + gap + '</button>';
+  }
   return out;
 }
 
@@ -747,6 +754,7 @@ function openDialog(item){
   setPhotoPreview(item ? item.image : '');
   if (item) { ['f-name','f-price','f-cat','f-size','f-color'].forEach(id => { if ($('#' + id).value) draft.touched.add(id); }); if (item.image) draft.touched.add('photo'); }
   $('#lookupBtn').hidden = !extractorUrl; $('#lookupBtn').disabled = false;
+  $('#pasteBtn').hidden = !(navigator.clipboard && navigator.clipboard.readText);
   $('#urlLabel').textContent = extractorUrl ? 'Paste the link and we\'ll fill in the rest' : 'Link to the store';
   setStatus('');
   if (!dlg.open) dlg.showModal();
@@ -844,7 +852,7 @@ function summarize(filled, url, info){
   const missing = [];
   if (!info.price && !draft.touched.has('f-price')) missing.push('price');
   if (!filled.includes('photo') && !draft.touched.has('photo') && !draft.dataUrl && !(draft.editing && draft.editing.image)) missing.push('photo');
-  if (missing.length) msg += " Couldn't get the " + missing.join(' or ') + ', so add ' + (missing.length > 1 ? 'those' : 'that') + ' yourself.';
+  if (missing.length) msg += " Couldn't get the " + missing.join(' or ') + '. You can add ' + (missing.length > 1 ? 'those' : 'that') + ' now, or save it anyway and finish it later.';
   if (info.price && info.currency && info.currency !== 'USD') msg += ' The price on that page is in ' + info.currency + '.';
   return { msg, kind: missing.length ? 'warn' : 'ok' };
 }
@@ -865,13 +873,13 @@ async function autofill(force){
     const j = await res.json();
     if (token !== lookupToken) return;
     if (!j.ok) {
-      const slug = j.reason === 'not_found' ? '' : nameFromUrl(url), got = [];
+      const slug = j.reason === 'not_found' ? '' : (draft.hintName || nameFromUrl(url) || ''), got = [];
       if (slug && !draft.touched.has('f-name')) { $('#f-name').value = slug; got.push('name'); }
       const cat = slug ? guessCategory(slug + ' ' + url) : '';
       if (cat && !draft.touched.has('f-cat')) { $('#f-cat').value = cat; got.push('category'); }
       const why = j.reason === 'not_found' ? "That link didn't open a page. Double-check it." :
         (j.reason === 'blocked' ? "That shop doesn't let us read its page." : "That shop's page didn't share its details.");
-      setStatus(got.length ? why + ' We filled in the ' + got.join(' and ') + ' from the link. Add the price and photo yourself.' : why + ' Fill in the details yourself.', 'warn',
+      setStatus(got.length ? why + ' We filled in the ' + got.join(' and ') + ' from the link. Add the price and photo now, or save it anyway and finish it later.' : why + ' Fill in the details yourself, or save the link and finish it later.', 'warn',
         JSON.stringify({ reason: j.reason, first: j.debug, second: j.debug2 }));
       return;
     }
@@ -895,16 +903,60 @@ function readCapture(){
   } catch(e){ return null; }
 }
 function stashCapture(){
+  stashLink();
   const j = readCapture(); if (!j) return;
   try { sessionStorage.setItem('pendingAdd', JSON.stringify(j)); } catch(e){ window.__pendingAdd = j; }
   try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
 }
+
+/* A plain product link arriving from a share button: the iPhone Share shortcut (#link=)
+   or a link like ...#link=<address>. It opens the Add form and looks the item up. */
+function firstHttp(s){ const m = String(s || '').match(/https?:\/\/[^\s<>"']+/i); return m ? m[0].replace(/[.,;:)\]]+$/, '') : ''; }
+function readLink(){
+  try {
+    let src = '', hint = '';
+    const h = location.hash.match(/^#link=(.+)$/);
+    if (h) { let v = h[1]; try { v = decodeURIComponent(v); } catch(e){} src = v; }
+    const q = new URLSearchParams(location.search);
+    if (!src && (q.get('url') || q.get('text') || q.get('link'))) { src = [q.get('url'), q.get('text'), q.get('link')].filter(Boolean).join(' '); hint = q.get('title') || ''; }
+    const link = firstHttp(src); if (!link) return null;
+    let text = src.replace(link, ' ').replace(/\s+/g, ' ').trim();
+    if (!hint || firstHttp(hint)) hint = text;
+    hint = String(hint).replace(/https?:\/\/\S+/g, '').split(/\s+[|–—]\s+/)[0].trim();
+    if (hint.length < 3 || hint.length > 120) hint = '';
+    return { link, hint };
+  } catch(e){ return null; }
+}
+function stashLink(){
+  const j = readLink(); if (!j) return;
+  try { sessionStorage.setItem('pendingLink', JSON.stringify(j)); } catch(e){ window.__pendingLink = j; }
+  try {
+    const q = new URLSearchParams(location.search); ['url','text','title','link'].forEach(k => q.delete(k));
+    const rest = q.toString();
+    history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
+  } catch(e){}
+}
 function maybeOpenPending(){
   if (!state.loaded) return;
-  let j = null;
+  let j = null, l = null;
   try { const t = sessionStorage.getItem('pendingAdd'); if (t) { sessionStorage.removeItem('pendingAdd'); j = JSON.parse(t); } } catch(e){}
   if (!j && window.__pendingAdd) { j = window.__pendingAdd; window.__pendingAdd = null; }
-  if (j) openFromCapture(j);
+  try { const t = sessionStorage.getItem('pendingLink'); if (t) { sessionStorage.removeItem('pendingLink'); l = JSON.parse(t); } } catch(e){}
+  if (!l && window.__pendingLink) { l = window.__pendingLink; window.__pendingLink = null; }
+  if (j) openFromCapture(j); else if (l) openFromLink(l);
+}
+async function openFromLink(l){
+  const url = safeUrl(String(l.link || '')); if (!url) return;
+  openDialog(null);
+  draft.hintName = String(l.hint || '').slice(0, 140);
+  $('#f-url').value = url;
+  await autofill(true);
+}
+async function lookupInfo(url){
+  if (!extractorUrl) return null;
+  const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 20000);
+  try { const r = await fetch(extractorUrl + '/?url=' + encodeURIComponent(url), { signal: ctrl.signal }); return await r.json(); }
+  catch(e){ return null; } finally { clearTimeout(to); }
 }
 async function openFromCapture(j){
   const url = safeUrl(String(j.u || ''));
@@ -917,7 +969,20 @@ async function openFromCapture(j){
   const info = { title: String(j.t || '').slice(0, 140), price, color: String(j.c || '').slice(0, 30), image: safeUrl(String(j.i || '')), url, currency: String(j.k || '').slice(0, 3).toUpperCase() };
   const filled = await applyInfo(info, token);
   if (token !== lookupToken) return;
-  const r = summarize(filled, url, info);
+  const merged = { price: info.price, currency: info.currency, site: '' };
+  // The button or shortcut sometimes can't see the photo or price; ask the store's own data for whatever is still empty.
+  if (extractorUrl && (!info.price || !draft.dataUrl)) {
+    setStatus('Checking the store for the rest…');
+    const j2 = await lookupInfo(url);
+    if (token !== lookupToken) return;
+    if (j2 && j2.ok) {
+      const more = await applyInfo({ title: info.title ? '' : j2.title, price: info.price ? '' : j2.price, color: info.color ? '' : j2.color, image: draft.dataUrl ? '' : j2.image, url: info.title ? '' : url, currency: j2.currency }, token);
+      if (token !== lookupToken) return;
+      more.forEach(f => { if (filled.indexOf(f) < 0) filled.push(f); });
+      merged.price = info.price || j2.price || ''; merged.site = j2.site || ''; merged.currency = info.currency || j2.currency || '';
+    }
+  }
+  const r = summarize(filled, url, merged);
   setStatus(r.msg, r.kind);
 }
 window.addEventListener('hashchange', () => { stashCapture(); maybeOpenPending(); });
@@ -925,6 +990,13 @@ $('#f-url').addEventListener('paste', () => setTimeout(() => autofill(false), 0)
 $('#f-url').addEventListener('change', () => autofill(false));
 $('#f-url').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); autofill(true); } });
 $('#lookupBtn').addEventListener('click', () => autofill(true));
+$('#pasteBtn').addEventListener('click', async () => {
+  try {
+    const u = firstHttp(await navigator.clipboard.readText());
+    if (!u) { setStatus("There's no link on your clipboard yet. Copy the product link first, then tap Paste."); return; }
+    $('#f-url').value = u; autofill(true);
+  } catch(e){ setStatus("Couldn't read your clipboard. Press and hold in the box and choose Paste."); }
+});
 
 $('#cancelBtn').addEventListener('click', closeDialog);
 dlg.addEventListener('click', e => { if (e.target === dlg) closeDialog(); });
@@ -992,6 +1064,7 @@ document.addEventListener('click', e => {
   const li = btn.closest('.item'); if (!li) return;
   const it = state.items.find(i => i.id === li.dataset.id); if (!it) return;
   if (act === 'edit') openDialog(it);
+  else if (act === 'finish') { openDialog(it); autofill(true); }
   else if (act === 'tier') upd(it.id, { tier: TIERS[(tierOf(it.tier).rank + 1) % TIERS.length].id });
   else if (act === 'bought') {
     upd(it.id, { purchased: true, boughtAt: Date.now() }).then(ok => {

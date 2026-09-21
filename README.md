@@ -62,7 +62,6 @@ Instead of `YOURNAME.github.io/eves-wishlist`, you can use something like `evesw
 Open the site, sign in with Google, and:
 
 - **iPhone:** Share button > **Add to Home Screen**.
-- **Android:** browser menu > **Install app** or **Add to Home screen**.
 - **Laptop:** just bookmark it.
 
 Her list syncs between devices, and it keeps working briefly without a connection.
@@ -77,12 +76,41 @@ them. This uses a tiny free helper (`worker.js`) running on Cloudflare Workers.
 3. Copy the worker's address (it ends in `.workers.dev`) into `extractorUrl` in `firebase-config.js`.
 4. If you later use your own domain, add it to `ALLOWED_ORIGINS` at the top of `worker.js`.
 
-Some shops (Amazon is the usual one) block automated readers. For those, the form stays blank and she types the details in.
-Size can't be read from a link, so she picks that herself.
+Some shops (Zara, Amazon and other big retailers) block automated readers. For those there is the **Add button**
+(`add-button.html`): a bookmark she taps while looking at the item in her own browser. It reads the name, price and photo
+from the page she can already see, so it works on any shop, then opens the wishlist with the form filled in.
+Size can't be read from a page, so she picks that herself.
+
+## Share from her phone (optional, recommended)
+
+`iphone-share.html` (linked from the wishlist's "phone Share button" hint) walks through it:
+
+- **iPhone:** two Shortcuts. One works from any app's Share menu and opens the wishlist with the link loaded. The other,
+  for shops that block automatic lookups, runs the page reader inside Safari on the page she is looking at.
+
+When a lookup can't find the price or photo, the item can still be saved. It gets an "Add price & photo" tag that she can tap
+later to try again or type them in.
+
+## Optional: let the helper open pages in a real browser
+
+Some shops only show their price and photo to a real browser. Cloudflare offers a real-browser service on your account.
+To switch it on, create an API token in Cloudflare (My Profile > API Tokens > Create Token, with the permission
+**Account > Browser Rendering > Edit**), then in your worker open **Settings > Variables and Secrets** and add two secrets:
+`CF_ACCOUNT_ID` (your account ID, shown on the Workers overview page) and `CF_API_TOKEN` (the token).
+The worker only uses it when a normal lookup comes back without a price or photo. Visiting the worker's address shows
+`"browser": true` once it is on. Shops that block Cloudflare too will still fall back to saving the link.
+
+## Advanced: phone downloads the page, helper reads it
+
+`POST /go` on the helper takes `{"url": "...", "html": "..."}` (a page the phone downloaded itself) and answers with a wishlist
+link that opens the form filled in. A Shortcut can chain "Get Contents of URL" (the product page), then "Get Contents of URL"
+(POST to `/go`, JSON with `url` and `html`), then "Open URLs". `POST /parse` returns the details as JSON instead.
 
 ## Files
 
 - `index.html` is the whole app.
+- `add-button.html` is the setup page for the Add button (bookmark).
+- `iphone-share.html` is the setup page for the Share menu (iPhone Shortcuts).
 - `firebase-config.js` is where the Firebase settings go.
 - `worker.js` is the helper that reads product links (runs on Cloudflare, not on GitHub).
 - `firestore.rules` is the security rule to paste into Firebase (not used by the site itself).
