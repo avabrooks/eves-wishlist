@@ -791,6 +791,19 @@ const CATEGORY_WORDS = [
   ['Home', /\b(candle|blanket|pillow|lamp|vase|mug|towel|rug|throw|bedding|sheets|diffuser)\b/i],
   ['Clothes', /\b(dress|top|tee|t-shirt|shirt|jeans|pants|trousers|skirt|sweater|cardigan|jacket|coat|hoodie|shorts|blouse|jumpsuit|romper|leggings|bodysuit|tank|set|pajamas|robe|blazer|vest|sweatshirt)\b/i]
 ];
+function nameFromUrl(url){
+  let segs; try { segs = new URL(url).pathname.split('/'); } catch(e){ return ''; }
+  let best = '', bestScore = 0;
+  segs.forEach(seg => {
+    let t; try { t = decodeURIComponent(seg); } catch(e){ t = seg; }
+    t = t.replace(/\.(html?|php|aspx?)$/i, '');
+    const words = t.split(/[-_+]/).filter(w => w && !/^[a-z]?\d{4,}$/i.test(w) && !/^p\d+$/i.test(w) && !/^[a-z]\d+$/i.test(w));
+    const letters = words.filter(w => /^[a-zA-ZÀ-ſ']+$/.test(w));
+    if (/^[a-z]{2}[-_][a-z]{2}$/i.test(t)) return;
+    if (letters.length >= 2 && letters.join('').length >= 8 && letters.length >= words.length * 0.7 && t.length > bestScore) { best = letters.join(' '); bestScore = t.length; }
+  });
+  return best ? best.replace(/\b([a-z])/g, m => m.toUpperCase()) : '';
+}
 function guessCategory(text){ for (const [cat, re] of CATEGORY_WORDS) if (re.test(text)) return cat; return ''; }
 
 async function autofill(force){
@@ -809,13 +822,18 @@ async function autofill(force){
     const j = await res.json();
     if (token !== lookupToken) return;
     if (!j.ok) {
-      setStatus(j.reason === 'blocked' ? "That shop doesn't let us read its page, so fill in the details yourself." :
-                j.reason === 'not_found' ? "That link didn't open a page. Double-check it." :
-                "Couldn't find product details on that page. Fill them in yourself.", 'warn');
+      const slug = j.reason === 'not_found' ? '' : nameFromUrl(url), got = [];
+      if (slug && !draft.touched.has('f-name')) { $('#f-name').value = slug; got.push('name'); }
+      const cat = slug ? guessCategory(slug + ' ' + url) : '';
+      if (cat && !draft.touched.has('f-cat')) { $('#f-cat').value = cat; got.push('category'); }
+      const why = j.reason === 'not_found' ? "That link didn't open a page. Double-check it." :
+        (j.reason === 'blocked' ? "That shop doesn't let us read its page." : "That shop's page didn't share its details.");
+      setStatus(got.length ? why + ' We filled in the ' + got.join(' and ') + ' from the link. Add the price and photo yourself.' : why + ' Fill in the details yourself.', 'warn');
+      if (j.debug) console.info('link lookup debug', j.reason, j.debug, j.debug2);
       return;
     }
     const filled = [], set = (id, label, v) => { if (v !== '' && v != null && !draft.touched.has(id)) { $('#' + id).value = v; filled.push(label); } };
-    set('f-name', 'name', j.title || '');
+    set('f-name', 'name', j.title || nameFromUrl(url));
     set('f-price', 'price', j.price || '');
     set('f-color', 'color', j.color || '');
     set('f-cat', 'category', guessCategory((j.title || '') + ' ' + url));
