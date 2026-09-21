@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Eve's Wishlist</title>
+<meta name="description" content="Eve's wishlist: everything she wants, ranked, with the payday she can buy it.">
+<meta name="theme-color" content="#C93D75">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Eve's Wishlist">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&family=Nunito:wght@400;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+:root{
+  --bg:#FFF4F6; --glow:#FFE0EA; --card:#FFFFFF; --ink:#432636; --ink-2:#7A5768; --line:#F4D9E2; --line-2:#EBC1D0;
+  --accent:#C93D75; --accent-ink:#FFFFFF; --accent-soft:#FFDDE8; --accent-soft-ink:#A32D5D;
+  --lav:#E8E0FF; --lav-ink:#5641A6; --sky:#DCEEFF; --sky-ink:#245F94;
+  --mint:#D3F4E5; --mint-ink:#17694D; --butter:#FFEFC2; --butter-ink:#84540A; --danger:#B3261E;
+  --shadow:0 12px 26px -16px rgba(160,40,90,.5);
+  --ph-s:78%; --ph-l:91%; --ph-ink-l:36%;
+  --display:"Fraunces","Iowan Old Style",Georgia,serif; --body:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#241A21; --glow:#3A2231; --card:#33262F; --ink:#FBE9F0; --ink-2:#C9A9B8; --line:#4A3642; --line-2:#60454F;
+    --accent:#F58AB3; --accent-ink:#2A1520; --accent-soft:#54293C; --accent-soft-ink:#FFB8D2;
+    --lav:#3C3363; --lav-ink:#D2C6FF; --sky:#1F3A55; --sky-ink:#A9D5FF;
+    --mint:#1F4A3C; --mint-ink:#9BE6C6; --butter:#4D3E16; --butter-ink:#FFD98A; --danger:#FF9C93;
+    --shadow:0 12px 26px -16px rgba(0,0,0,.7);
+    --ph-s:38%; --ph-l:25%; --ph-ink-l:80%;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#241A21; --glow:#3A2231; --card:#33262F; --ink:#FBE9F0; --ink-2:#C9A9B8; --line:#4A3642; --line-2:#60454F;
+  --accent:#F58AB3; --accent-ink:#2A1520; --accent-soft:#54293C; --accent-soft-ink:#FFB8D2;
+  --lav:#3C3363; --lav-ink:#D2C6FF; --sky:#1F3A55; --sky-ink:#A9D5FF;
+  --mint:#1F4A3C; --mint-ink:#9BE6C6; --butter:#4D3E16; --butter-ink:#FFD98A; --danger:#FF9C93;
+  --shadow:0 12px 26px -16px rgba(0,0,0,.7);
+  --ph-s:38%; --ph-l:25%; --ph-ink-l:80%;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);background-image:radial-gradient(90% 320px at 50% -60px,var(--glow),transparent 70%);background-repeat:no-repeat;color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:24px 96px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.app{max-width:1120px;margin:0 auto;display:grid;gap:20px}
+
+/* header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-family:var(--display);font-style:italic;font-weight:600;font-size:clamp(2rem,6vw,2.9rem);line-height:1;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.sub{margin:8px 0 0;color:var(--ink-2);max-width:46ch}
+.btn{border:0;border-radius:999px;padding:11px 20px;font-weight:800;background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:1.5px solid var(--line-2);padding:9px 16px}
+.btn.small{padding:7px 14px;font-size:.85rem}
+.btn[disabled]{opacity:.55;cursor:default;transform:none}
+
+/* banner */
+.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--butter);color:var(--butter-ink);padding:12px 16px;border-radius:16px;font-weight:600}
+.banner p{margin:0;flex:1 1 320px}
+.banner button{background:transparent;border:1.5px solid currentColor;color:inherit;border-radius:999px;padding:6px 14px;font-weight:800}
+
+/* summary */
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-block:1.5px dashed var(--line-2)}
+.stat{padding:14px 16px}
+.stat + .stat{border-left:1.5px dashed var(--line-2)}
+.stat .k{font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2)}
+.stat .v{font-family:var(--display);font-size:clamp(1.25rem,3.4vw,1.75rem);font-weight:600;line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat .d{color:var(--ink-2);font-size:.85rem}
+
+/* layout */
+.layout{display:grid;gap:20px;grid-template-columns:minmax(0,1fr);grid-template-areas:"plan" "main"}
+.plan{grid-area:plan}
+.main{grid-area:main;min-width:0}
+@media (min-width:920px){
+  .layout{grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"main plan";align-items:start}
+  .plan{position:sticky;top:16px}
+}
+
+/* plan card */
+.plan{background:var(--card);border:1.5px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:0}
+.plan > summary{list-style:none;cursor:pointer;padding:16px 20px;font-family:var(--display);font-weight:600;font-size:1.2rem;display:flex;justify-content:space-between;align-items:center}
+.plan > summary::-webkit-details-marker{display:none}
+.plan > summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:rotate(45deg);transition:transform .2s;margin-right:4px}
+.plan[open] > summary::after{transform:rotate(-135deg)}
+.plan-body{padding:0 20px 20px;display:grid;gap:14px}
+.field{display:grid;gap:5px}
+.field label,.lbl{font-size:.78rem;font-weight:800;color:var(--ink-2);letter-spacing:.03em}
+.inp{width:100%;border:1.5px solid var(--line-2);background:var(--bg);border-radius:14px;padding:10px 12px;min-height:44px}
+.inp:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+textarea.inp{min-height:76px;resize:vertical}
+.money{position:relative}
+.money span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-2);font-weight:700}
+.money .inp{padding-left:26px;font-variant-numeric:tabular-nums}
+.hint{font-size:.82rem;color:var(--ink-2);margin:0}
+.next-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.next-list li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:.9rem;border-top:1px dashed var(--line-2);padding-top:8px}
+.next-list b{font-variant-numeric:tabular-nums;font-family:var(--display);font-size:1.02rem}
+.plan h3{margin:4px 0 0;font-size:.78rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2)}
+.warn{background:var(--butter);color:var(--butter-ink);border-radius:12px;padding:8px 12px;font-size:.85rem;font-weight:600}
+
+/* tabs + filters */
+.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tabs{display:inline-flex;background:var(--line);padding:4px;border-radius:999px;gap:2px}
+.tab{border:0;background:transparent;padding:8px 18px;border-radius:999px;font-weight:800;color:var(--ink-2)}
+.tab[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 2px 8px -3px rgba(0,0,0,.25)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line-2);background:transparent;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:700;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-soft-ink);border-color:transparent}
+.tools{display:flex;align-items:center;gap:10px;justify-content:space-between;margin:0 0 10px;color:var(--ink-2);font-size:.85rem}
+.linkbtn{background:none;border:0;padding:4px 0;font-weight:800;color:var(--accent-soft-ink);text-decoration:underline;text-underline-offset:3px}
+
+/* list */
+.list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.band{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:.85rem;color:var(--ink-2)}
+.band:first-child{margin-top:0}
+.band .name{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--ink);white-space:nowrap}
+.band .rule{flex:1;border-top:1.5px dashed var(--line-2);min-width:16px}
+.band .left{white-space:nowrap;font-variant-numeric:tabular-nums}
+.band.now .name{color:var(--mint-ink)}
+.item{display:grid;grid-template-columns:28px 84px minmax(0,1fr);gap:12px;align-items:start;background:var(--card);border:1.5px solid var(--line);border-radius:22px;padding:12px 14px 12px 6px;box-shadow:var(--shadow)}
+.item.ghost{opacity:.35}
+.item.chosen{box-shadow:0 18px 34px -12px rgba(160,40,90,.6)}
+.grip{align-self:stretch;border:0;background:transparent;color:var(--ink-2);cursor:grab;display:grid;place-items:center;border-radius:10px;touch-action:none;padding:0}
+.grip:hover{background:var(--line)}
+.grip svg{width:14px;height:22px;fill:currentColor}
+.thumb{position:relative;width:84px;height:84px;border-radius:16px;overflow:hidden;background:hsl(var(--h,340) var(--ph-s) var(--ph-l));display:grid;place-items:center;color:hsl(var(--h,340) 45% var(--ph-ink-l))}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ph{font-family:var(--display);font-style:italic;font-weight:600;font-size:2rem}
+.rank{position:absolute;left:6px;top:6px;background:var(--card);color:var(--ink);font-weight:800;font-size:.72rem;min-width:22px;height:22px;border-radius:999px;display:grid;place-items:center;padding-inline:6px;font-variant-numeric:tabular-nums;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.body{min-width:0;display:grid;gap:6px}
+.row1{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.row1 h3{margin:0;font-size:1.05rem;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.price{font-family:var(--display);font-weight:600;font-size:1.2rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.76rem;font-weight:800;border-radius:999px;padding:3px 10px;background:var(--line);color:var(--ink-2);border:0}
+button.tag{cursor:pointer}
+.tag.need{background:var(--accent-soft);color:var(--accent-soft-ink)}
+.tag.want{background:var(--lav);color:var(--lav-ink)}
+.tag.dream{background:var(--sky);color:var(--sky-ink)}
+.notes{margin:0;color:var(--ink-2);font-size:.88rem;overflow-wrap:anywhere}
+.foot{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;margin-top:2px}
+.when{font-size:.82rem;font-weight:800;border-radius:999px;padding:4px 11px;background:var(--butter);color:var(--butter-ink)}
+.when.now{background:var(--mint);color:var(--mint-ink)}
+.when.far{background:var(--line);color:var(--ink-2)}
+.store{font-size:.82rem;font-weight:700;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.acts{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.act{border:0;background:transparent;font-weight:800;font-size:.82rem;color:var(--ink-2);padding:6px 10px;border-radius:999px;min-height:32px}
+.act:hover{background:var(--line);color:var(--ink)}
+.act.got{background:var(--mint);color:var(--mint-ink)}
+.act.armed{background:var(--danger);color:var(--bg)}
+.item.bought{opacity:.9}
+.item.bought .thumb{filter:saturate(.8)}
+.bought .price{text-decoration:none}
+.empty{border:2px dashed var(--line-2);border-radius:24px;padding:36px 20px;text-align:center;color:var(--ink-2);display:grid;gap:12px;justify-items:center}
+.empty h3{font-family:var(--display);font-size:1.4rem;color:var(--ink);margin:0}
+
+@media (max-width:520px){
+  .item{grid-template-columns:22px 72px minmax(0,1fr);gap:10px;padding:10px 10px 10px 2px}
+  .thumb{width:72px;height:72px}
+  .summary{grid-template-columns:1fr}
+  .stat + .stat{border-left:0;border-top:1.5px dashed var(--line-2)}
+  .band .left{display:none}
+}
+
+/* dialog */
+dialog{border:0;padding:0;border-radius:26px;background:var(--card);color:var(--ink);width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(67,38,54,.45)}
+.dlg{padding:22px;display:grid;gap:14px}
+.dlg h2{margin:0;font-family:var(--display);font-style:italic;font-weight:600;font-size:1.6rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.photo{display:flex;gap:14px;align-items:center}
+.photo .pv{width:92px;height:92px;border-radius:18px;background:var(--line);overflow:hidden;display:grid;place-items:center;color:var(--ink-2);flex:none;font-size:.75rem;text-align:center}
+.photo .pv img{width:100%;height:100%;object-fit:cover}
+.photo .col{display:grid;gap:6px;justify-items:start}
+.tiers{display:flex;gap:8px;flex-wrap:wrap}
+.tiers input{position:absolute;opacity:0;pointer-events:none}
+.tiers label{cursor:pointer;border:1.5px solid var(--line-2);border-radius:999px;padding:7px 14px;font-weight:800;font-size:.88rem;color:var(--ink-2)}
+.tiers input:checked + label{border-color:transparent}
+.tiers input[value="need"]:checked + label{background:var(--accent-soft);color:var(--accent-soft-ink)}
+.tiers input[value="want"]:checked + label{background:var(--lav);color:var(--lav-ink)}
+.tiers input[value="dream"]:checked + label{background:var(--sky);color:var(--sky-ink)}
+.tiers input:focus-visible + label{outline:3px solid var(--accent);outline-offset:2px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+.err{color:var(--danger);font-weight:700;font-size:.88rem;margin:0}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:10px 14px 10px 18px;border-radius:999px;font-weight:700;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 32px);transition:opacity .2s,transform .2s;z-index:50;flex-wrap:wrap;justify-content:center}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{background:transparent;border:1.5px solid currentColor;color:inherit;border-radius:999px;padding:4px 12px;font-weight:800;font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+img{max-width:100%}
+[hidden]{display:none!important}
+.gate{max-width:420px;margin:14vh auto 0;text-align:center;display:grid;gap:16px;justify-items:center}
+.gate p{color:var(--ink-2);margin:0}
+.acct{text-align:center;color:var(--ink-2);font-size:.85rem;margin:8px 0 0}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div>
+      <h1>Eve's Wishlist</h1>
+      <p class="sub">Rank what you want, then see exactly which paycheck gets you there.</p>
+    </div>
+    <button class="btn" id="addBtn" type="button">+ Add something</button>
+  </header>
+
+  <div class="banner" id="exampleBanner" hidden>
+    <p>These are example picks so you can see how it works. Put your own numbers in the paycheck plan, add your things, then clear the examples.</p>
+    <button type="button" id="clearExamples">Clear examples</button>
+  </div>
+  <div class="banner" id="modeBanner" hidden>
+    <p>Sync isn't set up yet, so this list is saved on this device only. Follow the README to turn on Google sign-in and use the same list on your phone and laptop.</p>
+  </div>
+
+  <section class="summary" id="summary" aria-label="Summary"></section>
+
+  <div class="layout">
+    <details class="plan" id="plan">
+      <summary>Paycheck plan</summary>
+      <div class="plan-body">
+        <div class="field">
+          <label for="p-freq">How often are you paid?</label>
+          <select class="inp" id="p-freq">
+            <option value="weekly">Every week</option>
+            <option value="biweekly">Every 2 weeks</option>
+            <option value="semimonthly">Twice a month (15th and last day)</option>
+            <option value="monthly">Once a month</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="p-next">Next payday</label>
+          <input class="inp" type="date" id="p-next">
+        </div>
+        <div class="field">
+          <label for="p-per">Set aside from each paycheck</label>
+          <div class="money"><span>$</span><input class="inp" id="p-per" type="number" inputmode="decimal" min="0" step="1" placeholder="0"></div>
+        </div>
+        <div class="field">
+          <label for="p-saved">Already saved up</label>
+          <div class="money"><span>$</span><input class="inp" id="p-saved" type="number" inputmode="decimal" min="0" step="1" placeholder="0"></div>
+        </div>
+        <p class="hint" id="planHint">Your next payday rolls forward on its own, so you only set it once.</p>
+        <div class="warn" id="planWarn" hidden></div>
+        <h3>What you'll have</h3>
+        <ul class="next-list" id="nextList"></ul>
+      </div>
+    </details>
+
+    <main class="main">
+      <div class="bar">
+        <div class="tabs" role="tablist" aria-label="View">
+          <button class="tab" role="tab" id="tab-list" aria-selected="true" type="button">Wishlist</button>
+          <button class="tab" role="tab" id="tab-bought" aria-selected="false" type="button">Got it</button>
+        </div>
+        <div class="chips" id="chips" aria-label="Filter by category"></div>
+      </div>
+      <div class="tools" id="tools"></div>
+      <ul class="list" id="list"><li class="empty"><p>Loading your list…</p></li></ul>
+    </main>
+  </div>
+  <p class="acct" id="acct" hidden>Signed in as <span id="acctEmail"></span> · <button type="button" class="linkbtn" id="signOut">Sign out</button></p>
+</div>
+
+<section class="gate" id="gate" hidden>
+  <h1>Eve's Wishlist</h1>
+  <p id="gateMsg">Checking sign-in…</p>
+  <button class="btn" type="button" id="gateBtn" hidden>Sign in</button>
+</section>
+
+<dialog id="itemDialog" aria-labelledby="dlgTitle">
+  <form class="dlg" id="itemForm" novalidate>
+    <h2 id="dlgTitle">Add something</h2>
+    <div class="field">
+      <label for="f-name">What is it?</label>
+      <input class="inp" id="f-name" maxlength="120" placeholder="e.g. Cream cable-knit cardigan" required>
+    </div>
+    <div class="photo" id="photoRow">
+      <div class="pv" id="photoPv">No photo</div>
+      <div class="col">
+        <span class="lbl">Photo</span>
+        <input type="file" id="f-photo" accept="image/*" hidden>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost small" type="button" id="photoPick">Choose photo</button>
+          <button class="btn ghost small" type="button" id="photoClear" hidden>Remove</button>
+        </div>
+        <p class="hint">You can also paste a screenshot while this is open.</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="f-price">Price</label>
+        <div class="money"><span>$</span><input class="inp" id="f-price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="field">
+        <label for="f-cat">Category</label>
+        <input class="inp" id="f-cat" list="catList" maxlength="30" placeholder="Clothes, Shoes, Beauty…">
+        <datalist id="catList"></datalist>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-url">Link to the store</label>
+      <input class="inp" id="f-url" type="url" inputmode="url" placeholder="Paste the product link">
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="f-size">Size</label><input class="inp" id="f-size" maxlength="30" placeholder="M, 8, 27…"></div>
+      <div class="field"><label for="f-color">Color</label><input class="inp" id="f-color" maxlength="30" placeholder="Oat, black…"></div>
+    </div>
+    <div class="field">
+      <span class="lbl" id="tierLbl">How much do you want it?</span>
+      <div class="tiers" role="radiogroup" aria-labelledby="tierLbl">
+        <input type="radio" name="tier" id="t-need" value="need"><label for="t-need">Need it</label>
+        <input type="radio" name="tier" id="t-want" value="want" checked><label for="t-want">Want it</label>
+        <input type="radio" name="tier" id="t-dream" value="dream"><label for="t-dream">Someday</label>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-notes">Notes</label>
+      <textarea class="inp" id="f-notes" maxlength="400" placeholder="Wait for a sale, check the reviews, ask for it for my birthday…"></textarea>
+    </div>
+    <p class="err" id="formErr" hidden></p>
+    <div class="dlg-foot">
+      <button class="btn ghost" type="button" id="cancelBtn">Cancel</button>
+      <button class="btn" type="submit" id="saveBtn">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+/* Eve's Wishlist. One page, two storage modes:
+   - "local": no setup needed, list lives in this browser only (used until firebase-config.js is filled in)
+   - "cloud": Google sign-in + Firestore, syncs across phone and laptop */
+const $ = (s, r) => (r || document).querySelector(s);
+let store = null;
+const state = { items: [], settings: null, loaded: false, tab: 'list', cat: 'All', dragging: false, pendingRender: false };
+const TIERS = [ {id:'need', label:'Need it', rank:0}, {id:'want', label:'Want it', rank:1}, {id:'dream', label:'Someday', rank:2} ];
+const tierOf = id => TIERS.find(t => t.id === id) || TIERS[1];
+let sortable = null;
+let draft = { dataUrl: null, removed: false, editing: null };
+
+/* ---------- helpers ---------- */
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(n){
+  n = Math.round((Number(n)||0) * 100) / 100;
+  return '$' + n.toLocaleString(undefined, { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
+}
+function safeUrl(u){
+  if(!u) return '';
+  try { const x = new URL(/^[a-z][a-z0-9+.-]*:/i.test(u) ? u : 'https://' + u); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : ''; } catch(e){ return ''; }
+}
+function safeImg(u){ return (typeof u === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u)) ? u : ''; }
+function host(u){ try { return new URL(u).hostname.replace(/^www\./,''); } catch(e){ return ''; } }
+function hue(str){ let h = 0; for (let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) % 360; return h; }
+const byOrder = (a,b) => ((a.order||0) - (b.order||0)) || ((a.createdAt||0) - (b.createdAt||0));
+
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const parseYmd = s => { const p = String(s).split('-').map(Number); return new Date(p[0], p[1]-1, p[2], 12); };
+const today = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12); };
+const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n, 12);
+const eom = (y,m) => new Date(y, m+1, 0, 12).getDate();
+const daysBetween = (a,b) => Math.round((b-a)/86400000);
+const fmtDate = d => d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+function rel(d){
+  const n = daysBetween(today(), d);
+  if (n <= 0) return 'today';
+  if (n === 1) return 'tomorrow';
+  if (n < 14) return 'in ' + n + ' days';
+  if (n < 60) return 'in ' + Math.round(n/7) + ' weeks';
+  return 'in ' + Math.round(n/30) + ' months';
+}
+
+/* ---------- paycheck maths ---------- */
+function defaultSettings(){
+  const t = today(); const add = (5 - t.getDay() + 7) % 7;
+  return { freq: 'biweekly', nextPayday: ymd(addDays(t, add)), perCheck: 100, saved: 0 };
+}
+function cfg(){
+  const d = defaultSettings(), s = state.settings || {};
+  return {
+    freq: ['weekly','biweekly','semimonthly','monthly'].indexOf(s.freq) >= 0 ? s.freq : d.freq,
+    nextPayday: /^\d{4}-\d{2}-\d{2}$/.test(s.nextPayday || '') ? s.nextPayday : d.nextPayday,
+    perCheck: Math.max(0, Number(s.perCheck) || 0),
+    saved: Math.max(0, Number(s.saved) || 0),
+    isDefault: !state.settings
+  };
+}
+function paydays(c, count){
+  const anchor = parseYmd(c.nextPayday), day = anchor.getDate(), t = today();
+  let step, cur = anchor, guard = 0;
+  if (c.freq === 'weekly') step = d => addDays(d,7);
+  else if (c.freq === 'biweekly') step = d => addDays(d,14);
+  else if (c.freq === 'monthly') step = d => { const y = d.getFullYear(), m = d.getMonth()+1; return new Date(y, m, Math.min(day, eom(y,m)), 12); };
+  else step = d => {
+    const y = d.getFullYear(), m = d.getMonth(), dd = d.getDate(), last = eom(y,m);
+    if (dd < 15) return new Date(y, m, 15, 12);
+    if (dd < last) return new Date(y, m, last, 12);
+    return new Date(y, m+1, 15, 12);
+  };
+  while (cur < t && guard++ < 6000) cur = step(cur);
+  const out = [];
+  for (let i=0;i<count;i++){ out.push(cur); cur = step(cur); }
+  return out;
+}
+function buildPlan(){
+  const c = cfg();
+  const open = state.items.filter(i => !i.purchased).sort(byOrder);
+  let cum = 0, maxN = 0; const rows = [];
+  open.forEach(it => {
+    cum += Number(it.price) || 0;
+    let n;
+    if (cum <= c.saved + 0.005) n = 0;
+    else if (c.perCheck <= 0) n = Infinity;
+    else n = Math.ceil((cum - c.saved) / c.perCheck - 1e-9);
+    if (isFinite(n) && n <= 200) maxN = Math.max(maxN, n);
+    rows.push({ it, cum, n });
+  });
+  const days = paydays(c, Math.max(maxN, 4));
+  rows.forEach(r => {
+    r.date = (isFinite(r.n) && r.n >= 1 && r.n <= 200) ? days[r.n-1] : null;
+    r.far = !isFinite(r.n) || r.n > 200;
+  });
+  return { c, rows, days, total: cum };
+}
+
+/* ---------- toast + write helper ---------- */
+let toastTimer = null;
+function toast(msg, actions, ms){
+  const el = $('#toast'); el.innerHTML = '';
+  const s = document.createElement('span'); s.textContent = msg; el.appendChild(s);
+  (actions || []).forEach(a => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = a.label;
+    b.addEventListener('click', () => { el.classList.remove('on'); a.fn(); });
+    el.appendChild(b);
+  });
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), ms || (actions && actions.length ? 8000 : 3200));
+}
+function failMsg(e){
+  return (e && e.code === 'permission-denied') ? "This account isn't allowed to make changes." : "Couldn't save that. Give it a moment and try again.";
+}
+function run(fn){
+  try { return Promise.resolve(fn()).then(() => true, e => { toast(failMsg(e)); return false; }); }
+  catch(e){ toast(failMsg(e)); return Promise.resolve(false); }
+}
+const upd = (id, data) => run(() => store.updateItem(id, data));
+
+/* ---------- settings form ---------- */
+let saveTimer = null, settingsDirty = false;
+function readSettingsForm(){
+  return {
+    freq: $('#p-freq').value,
+    nextPayday: $('#p-next').value || cfg().nextPayday,
+    perCheck: Math.max(0, parseFloat($('#p-per').value) || 0),
+    saved: Math.max(0, parseFloat($('#p-saved').value) || 0)
+  };
+}
+function fillSettingsForm(){
+  const c = cfg();
+  const set = (sel, v) => { const el = $(sel); if (document.activeElement !== el) el.value = v; };
+  set('#p-freq', c.freq); set('#p-next', c.nextPayday);
+  set('#p-per', c.perCheck || ''); set('#p-saved', c.saved || '');
+}
+function onSettingsInput(){
+  state.settings = readSettingsForm();
+  settingsDirty = true;
+  renderAll(true);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const data = state.settings;
+    run(() => store.setSettings(data)).then(() => { settingsDirty = false; });
+  }, 600);
+}
+['#p-freq','#p-next','#p-per','#p-saved'].forEach(sel => {
+  $(sel).addEventListener('input', onSettingsInput);
+  $(sel).addEventListener('change', onSettingsInput);
+});
+
+/* ---------- rendering ---------- */
+function renderAll(fromSettings){
+  if (state.dragging) { state.pendingRender = true; return; }
+  const P = buildPlan();
+  renderSummary(P);
+  renderPlan(P, fromSettings);
+  renderChips();
+  renderTools(P);
+  if (state.tab === 'list') renderList(P); else renderBought();
+  $('#exampleBanner').hidden = !state.items.some(i => i.example);
+}
+
+function renderSummary(P){
+  const open = P.rows.length, c = P.c;
+  const last = P.rows.length ? P.rows[P.rows.length-1] : null;
+  const nextDay = P.days[0];
+  let finish, finishSub;
+  if (!last) { finish = '—'; finishSub = 'Add something to see a date'; }
+  else if (last.n === 0) { finish = 'Now'; finishSub = 'Your savings cover it all'; }
+  else if (last.far) { finish = c.perCheck <= 0 ? 'Set an amount' : 'A long way off'; finishSub = c.perCheck <= 0 ? 'Add what you set aside per paycheck' : 'Over 200 paychecks at this pace'; }
+  else { finish = fmtDate(last.date); finishSub = 'Payday ' + last.n + ' · ' + rel(last.date); }
+  $('#summary').innerHTML =
+    '<div class="stat"><div class="k">Still on the list</div><div class="v">' + money(P.total) + '</div><div class="d">' + open + (open === 1 ? ' thing' : ' things') + '</div></div>' +
+    '<div class="stat"><div class="k">Next payday</div><div class="v">' + esc(fmtDate(nextDay)) + '</div><div class="d">' + esc(rel(nextDay)) + ' · ' + money(c.perCheck) + ' set aside</div></div>' +
+    '<div class="stat"><div class="k">Whole list covered</div><div class="v">' + esc(finish) + '</div><div class="d">' + esc(finishSub) + '</div></div>';
+}
+
+function renderPlan(P, fromSettings){
+  const c = P.c;
+  if (!fromSettings) fillSettingsForm();
+  const freqTxt = { weekly: 'every week', biweekly: 'every 2 weeks', semimonthly: 'on the 15th and last day', monthly: 'once a month' }[c.freq];
+  $('#planHint').textContent = c.isDefault
+    ? 'These are starter numbers. Change them to match your real paychecks.'
+    : 'Paid ' + freqTxt + '. Your next payday rolls forward on its own, so you only set it once.';
+  const w = $('#planWarn');
+  if (c.perCheck <= 0) { w.hidden = false; w.textContent = 'Add an amount to set aside each paycheck to see buy dates.'; } else w.hidden = true;
+  let html = '<li><span>Today</span><b>' + money(c.saved) + '</b></li>';
+  P.days.slice(0,4).forEach((d, i) => {
+    html += '<li><span>' + esc(fmtDate(d)) + '</span><b>' + money(c.saved + c.perCheck * (i+1)) + '</b></li>';
+  });
+  $('#nextList').innerHTML = html;
+}
+
+function categories(){
+  const seen = {}, out = [];
+  state.items.forEach(i => { if ((!i.purchased) === (state.tab === 'list') && i.category && !seen[i.category]) { seen[i.category] = 1; out.push(i.category); } });
+  return out.sort();
+}
+function renderChips(){
+  const cats = categories();
+  if (state.cat !== 'All' && cats.indexOf(state.cat) < 0) state.cat = 'All';
+  const box = $('#chips');
+  box.hidden = cats.length < 2;
+  box.innerHTML = ['All'].concat(cats).map(c =>
+    '<button type="button" class="chip" data-cat="' + esc(c) + '" aria-pressed="' + (c === state.cat) + '">' + esc(c) + '</button>').join('');
+  const base = ['Clothes','Shoes','Bags','Accessories','Beauty','Home','Gifts'];
+  const all = base.slice();
+  state.items.forEach(i => { if (i.category && all.indexOf(i.category) < 0) all.push(i.category); });
+  $('#catList').innerHTML = all.map(c => '<option value="' + esc(c) + '">').join('');
+}
+function renderTools(P){
+  const t = $('#tools');
+  if (state.tab !== 'list' || !P.rows.length) { t.innerHTML = ''; return; }
+  t.innerHTML = '<span>Drag the handle (or use the arrow keys on it) to change the order. Buy dates follow the order.</span>' +
+    '<button type="button" class="linkbtn" id="sortTier">Sort by priority</button>';
+}
+
+function thumb(it, rank){
+  const img = safeImg(it.image);
+  const inner = img ? '<img src="' + img + '" alt="" loading="lazy">'
+    : '<span class="ph" aria-hidden="true">' + esc((it.name || '?').trim().charAt(0).toUpperCase()) + '</span>';
+  return '<div class="thumb" style="--h:' + hue(it.category || it.name || '') + '">' + inner + (rank ? '<span class="rank" title="Priority order">' + rank + '</span>' : '') + '</div>';
+}
+function metaTags(it, interactive){
+  const t = tierOf(it.tier); let out = '';
+  out += interactive ? '<button type="button" class="tag ' + t.id + '" data-act="tier" title="Tap to change">' + t.label + '</button>' : '<span class="tag ' + t.id + '">' + t.label + '</span>';
+  if (it.category) out += '<span class="tag">' + esc(it.category) + '</span>';
+  if (it.size) out += '<span class="tag">Size ' + esc(it.size) + '</span>';
+  if (it.color) out += '<span class="tag">' + esc(it.color) + '</span>';
+  return out;
+}
+
+function renderList(P){
+  const list = $('#list');
+  if (sortable) { sortable.destroy(); sortable = null; }
+  if (!state.loaded) return;
+  if (!P.rows.length) {
+    list.innerHTML = '<li class="empty"><h3>Nothing on the list yet</h3><p>Add the first thing you have your eye on.</p><button class="btn" type="button" data-act="add">+ Add something</button></li>';
+    return;
+  }
+  const filtered = state.cat !== 'All';
+  let html = '', lastN = null, rank = 0;
+  const showBands = !filtered && (P.c.perCheck > 0 || P.rows.some(r => r.n === 0));
+  P.rows.forEach((r, idx) => {
+    rank++;
+    if (filtered && r.it.category !== state.cat) return;
+    if (showBands && r.n !== lastN) {
+      lastN = r.n;
+      let groupEnd = idx; while (groupEnd + 1 < P.rows.length && P.rows[groupEnd+1].n === r.n) groupEnd++;
+      const avail = P.c.saved + P.c.perCheck * (isFinite(r.n) ? r.n : 0);
+      const leftover = avail - P.rows[groupEnd].cum;
+      let name, left = '';
+      if (r.n === 0) { name = 'Covered by your savings'; left = money(Math.max(0, leftover)) + ' left over'; }
+      else if (r.far) { name = P.c.perCheck <= 0 ? 'Set an amount to see dates' : 'Way down the road'; }
+      else { name = 'Payday ' + r.n + ' · ' + fmtDate(r.date); left = money(Math.max(0, leftover)) + ' left over'; }
+      html += '<li class="band' + (r.n === 0 ? ' now' : '') + '"><span class="name">' + esc(name) + '</span><span class="rule"></span><span class="left">' + left + '</span></li>';
+    }
+    const it = r.it; let when = '';
+    if (P.c.perCheck > 0 || r.n === 0) {
+      if (r.n === 0) when = '<span class="when now">Yours now</span>';
+      else if (r.far) when = '<span class="when far">Not on the calendar</span>';
+      else when = '<span class="when">Yours ' + esc(fmtDate(r.date)) + '</span>';
+    }
+    const u = safeUrl(it.url);
+    html += '<li class="item" data-id="' + esc(it.id) + '">' +
+      '<button type="button" class="grip" aria-label="Move ' + esc(it.name) + '. Use arrow keys to reorder." title="Drag to reorder"><svg viewBox="0 0 14 22" aria-hidden="true"><circle cx="4" cy="4" r="1.8"/><circle cx="10" cy="4" r="1.8"/><circle cx="4" cy="11" r="1.8"/><circle cx="10" cy="11" r="1.8"/><circle cx="4" cy="18" r="1.8"/><circle cx="10" cy="18" r="1.8"/></svg></button>' +
+      thumb(it, rank) +
+      '<div class="body">' +
+        '<div class="row1"><h3>' + esc(it.name) + '</h3><span class="price">' + (Number(it.price) > 0 ? money(it.price) : '') + '</span></div>' +
+        '<div class="meta">' + metaTags(it, true) + '</div>' +
+        (it.notes ? '<p class="notes">' + esc(it.notes) + '</p>' : '') +
+        '<div class="foot">' + when +
+          (u ? '<a class="store" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(host(u)) + ' ↗</a>' : '') +
+          '<div class="acts"><button type="button" class="act got" data-act="bought">Got it</button><button type="button" class="act" data-act="edit">Edit</button><button type="button" class="act" data-act="delete">Delete</button></div>' +
+        '</div>' +
+      '</div></li>';
+  });
+  if (!html) html = '<li class="empty"><h3>Nothing in ' + esc(state.cat) + '</h3><button class="btn ghost small" type="button" data-cat="All">Show everything</button></li>';
+  list.innerHTML = html;
+  if (window.Sortable) {
+    sortable = window.Sortable.create(list, {
+      handle: '.grip', draggable: '.item', animation: 160, ghostClass: 'ghost', chosenClass: 'chosen',
+      onStart: () => { state.dragging = true; },
+      onEnd: evt => {
+        state.dragging = false;
+        if (evt.oldIndex === evt.newIndex) { renderAll(); return; }
+        const ids = Array.prototype.map.call(list.querySelectorAll('.item'), e => e.dataset.id);
+        reorder(evt.item.dataset.id, ids).then(() => { state.pendingRender = false; renderAll(); });
+      }
+    });
+  }
+}
+
+function renderBought(){
+  const list = $('#list');
+  if (sortable) { sortable.destroy(); sortable = null; }
+  $('#tools').innerHTML = '';
+  const done = state.items.filter(i => i.purchased && (state.cat === 'All' || i.category === state.cat))
+    .sort((a,b) => (b.boughtAt||0) - (a.boughtAt||0));
+  if (!done.length) {
+    list.innerHTML = '<li class="empty"><h3>Nothing checked off yet</h3><p>When you buy something, tap “Got it” and it lands here.</p></li>';
+    return;
+  }
+  const total = done.reduce((s,i) => s + (Number(i.price)||0), 0);
+  let html = '<li class="band"><span class="name">Bought so far</span><span class="rule"></span><span class="left">' + money(total) + '</span></li>';
+  done.forEach(it => {
+    const when = it.boughtAt ? new Date(it.boughtAt).toLocaleDateString(undefined, { month:'short', day:'numeric' }) : '';
+    const u = safeUrl(it.url);
+    html += '<li class="item bought" data-id="' + esc(it.id) + '" style="grid-template-columns:84px minmax(0,1fr);padding-left:14px">' +
+      thumb(it, 0) +
+      '<div class="body"><div class="row1"><h3>' + esc(it.name) + '</h3><span class="price">' + (Number(it.price) > 0 ? money(it.price) : '') + '</span></div>' +
+      '<div class="meta">' + metaTags(it, false) + '</div>' +
+      '<div class="foot">' + (when ? '<span class="when now">Bought ' + esc(when) + '</span>' : '') +
+        (u ? '<a class="store" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(host(u)) + ' ↗</a>' : '') +
+        '<div class="acts"><button type="button" class="act" data-act="unbuy">Put back on list</button><button type="button" class="act" data-act="delete">Delete</button></div></div>' +
+      '</div></li>';
+  });
+  list.innerHTML = html;
+}
+
+/* ---------- ordering ---------- */
+async function reorder(id, ids){
+  const by = new Map(state.items.map(i => [i.id, i]));
+  const idx = ids.indexOf(id); if (idx < 0) return;
+  const p = idx > 0 ? by.get(ids[idx-1]).order : null;
+  const n = idx < ids.length - 1 ? by.get(ids[idx+1]).order : null;
+  let o;
+  if (p != null && n != null) { o = (p + n) / 2; if (!(o > p && o < n)) return renormalize(id, ids); }
+  else if (p != null) o = p + 1024;
+  else if (n != null) o = n - 1024;
+  else o = 1024;
+  await upd(id, { order: o });
+}
+async function renormalize(id, visibleIds){
+  let open = state.items.filter(i => !i.purchased).sort(byOrder).map(i => i.id).filter(x => x !== id);
+  const idx = visibleIds.indexOf(id);
+  const anchor = idx > 0 ? visibleIds[idx-1] : null;
+  open.splice(anchor ? open.indexOf(anchor) + 1 : 0, 0, id);
+  const by = new Map(state.items.map(i => [i.id, i]));
+  for (let k = 0; k < open.length; k++) {
+    const want = (k + 1) * 1024;
+    if (by.get(open[k]).order !== want) await upd(open[k], { order: want });
+  }
+}
+function nudge(id, dir){
+  const vis = Array.prototype.map.call($('#list').querySelectorAll('.item'), e => e.dataset.id);
+  const i = vis.indexOf(id), j = i + dir;
+  if (i < 0 || j < 0 || j >= vis.length) return;
+  vis.splice(i, 1); vis.splice(j, 0, id);
+  reorder(id, vis).then(() => {
+    const g = document.querySelector('.item[data-id="' + id + '"] .grip'); if (g) g.focus();
+  });
+}
+let sortArmed = false;
+async function sortByTier(){
+  const open = state.items.filter(i => !i.purchased).sort((a,b) => (tierOf(a.tier).rank - tierOf(b.tier).rank) || byOrder(a,b));
+  for (let k = 0; k < open.length; k++) {
+    const want = (k + 1) * 1024;
+    if (open[k].order !== want) await upd(open[k].id, { order: want });
+  }
+  toast('Sorted: Need it, then Want it, then Someday.');
+}
+
+/* ---------- item dialog ---------- */
+const dlg = $('#itemDialog');
+function setPhotoPreview(url){
+  const pv = $('#photoPv');
+  const safe = safeImg(url);
+  pv.innerHTML = safe ? '<img src="' + safe + '" alt="Photo preview">' : 'No photo';
+  $('#photoClear').hidden = !safe;
+}
+function openDialog(item){
+  draft = { dataUrl: null, removed: false, editing: item || null };
+  $('#dlgTitle').textContent = item ? 'Edit this pick' : 'Add something';
+  $('#f-name').value = item ? (item.name || '') : '';
+  $('#f-price').value = item && item.price ? item.price : '';
+  $('#f-cat').value = item ? (item.category || '') : (state.cat !== 'All' ? state.cat : '');
+  $('#f-url').value = item ? (item.url || '') : '';
+  $('#f-size').value = item ? (item.size || '') : '';
+  $('#f-color').value = item ? (item.color || '') : '';
+  $('#f-notes').value = item ? (item.notes || '') : '';
+  $('#t-' + (item ? tierOf(item.tier).id : 'want')).checked = true;
+  $('#formErr').hidden = true;
+  $('#saveBtn').disabled = false; $('#saveBtn').textContent = 'Save';
+  setPhotoPreview(item ? item.image : '');
+  if (!dlg.open) dlg.showModal();
+  $('#f-name').focus();
+}
+function closeDialog(){ dlg.close(); }
+
+async function shrink(file){
+  const bmp = await createImageBitmap(file);
+  const max = 520, r = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * r); c.height = Math.round(bmp.height * r);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(bmp, 0, 0, c.width, c.height);
+  let q = 0.78, url = c.toDataURL('image/jpeg', q);
+  while (url.length > 300000 && q > 0.4) { q -= 0.12; url = c.toDataURL('image/jpeg', q); }
+  return url;
+}
+async function takePhoto(file){
+  const err = $('#formErr');
+  try {
+    draft.dataUrl = await shrink(file); draft.removed = false;
+    setPhotoPreview(draft.dataUrl); err.hidden = true;
+  } catch(e){ err.hidden = false; err.textContent = "Couldn't read that photo. Try a JPG or PNG, or a screenshot."; }
+}
+$('#photoPick').addEventListener('click', () => $('#f-photo').click());
+$('#f-photo').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) takePhoto(f); e.target.value = ''; });
+$('#photoClear').addEventListener('click', () => { draft.dataUrl = null; draft.removed = true; setPhotoPreview(''); });
+dlg.addEventListener('paste', e => {
+  const files = (e.clipboardData && e.clipboardData.files) || [];
+  for (let i = 0; i < files.length; i++) if (/^image\//.test(files[i].type)) { e.preventDefault(); takePhoto(files[i]); break; }
+});
+$('#cancelBtn').addEventListener('click', closeDialog);
+dlg.addEventListener('click', e => { if (e.target === dlg) closeDialog(); });
+
+function orderForNew(tier){
+  const open = state.items.filter(i => !i.purchased).sort(byOrder);
+  const rank = tierOf(tier).rank; let idx = -1;
+  open.forEach((i, k) => { if (tierOf(i.tier).rank <= rank) idx = k; });
+  if (idx < 0) return open.length ? (open[0].order || 0) - 1024 : 1024;
+  const prev = open[idx].order || 0, next = idx + 1 < open.length ? (open[idx+1].order || 0) : null;
+  if (next == null) return prev + 1024;
+  const o = (prev + next) / 2; return (o > prev && o < next) ? o : prev + 1024;
+}
+
+$('#itemForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#formErr'), name = $('#f-name').value.trim();
+  if (!name) { err.hidden = false; err.textContent = 'Give it a name so you can find it later.'; $('#f-name').focus(); return; }
+  const rawUrl = $('#f-url').value.trim(), url = safeUrl(rawUrl);
+  if (rawUrl && !url) { err.hidden = false; err.textContent = "That link doesn't look right. Paste the full product address."; $('#f-url').focus(); return; }
+  err.hidden = true;
+  const btn = $('#saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+  const old = draft.editing;
+  const tier = (document.querySelector('input[name="tier"]:checked') || {}).value || 'want';
+  const image = draft.removed ? null : (draft.dataUrl || (old ? (old.image || null) : null));
+  const doc = {
+    name, price: Math.max(0, parseFloat($('#f-price').value) || 0), url,
+    category: $('#f-cat').value.trim(), tier, size: $('#f-size').value.trim(), color: $('#f-color').value.trim(),
+    notes: $('#f-notes').value.trim(), image,
+    order: old ? (old.order || 0) : orderForNew(tier), purchased: old ? !!old.purchased : false,
+    createdAt: old ? (old.createdAt || Date.now()) : Date.now()
+  };
+  if (old && old.boughtAt) doc.boughtAt = old.boughtAt;
+  const id = old ? old.id : store.newId();
+  const ok = await run(() => store.setItem(id, doc));
+  if (!ok) { btn.disabled = false; btn.textContent = 'Save'; return; }
+  closeDialog();
+  if (!old) {
+    const pos = state.items.filter(i => !i.purchased && (i.order||0) <= doc.order).length + 1;
+    toast('Added to your list at #' + pos + '. Drag it if you want it somewhere else.');
+  }
+});
+
+/* ---------- list actions ---------- */
+$('#addBtn').addEventListener('click', () => openDialog(null));
+$('#tab-list').addEventListener('click', () => setTab('list'));
+$('#tab-bought').addEventListener('click', () => setTab('bought'));
+function setTab(t){
+  state.tab = t; state.cat = 'All';
+  $('#tab-list').setAttribute('aria-selected', t === 'list'); $('#tab-bought').setAttribute('aria-selected', t === 'bought');
+  renderAll();
+}
+document.addEventListener('click', e => {
+  const chip = e.target.closest('[data-cat]');
+  if (chip) { state.cat = chip.dataset.cat; renderAll(); return; }
+  const sb = e.target.closest('#sortTier');
+  if (sb) {
+    if (!sortArmed) { sortArmed = true; sb.textContent = 'Reorder everything by priority? Tap again'; setTimeout(() => { sortArmed = false; if (sb.isConnected) sb.textContent = 'Sort by priority'; }, 3500); }
+    else { sortArmed = false; sortByTier(); }
+    return;
+  }
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const act = btn.dataset.act;
+  if (act === 'add') { openDialog(null); return; }
+  const li = btn.closest('.item'); if (!li) return;
+  const it = state.items.find(i => i.id === li.dataset.id); if (!it) return;
+  if (act === 'edit') openDialog(it);
+  else if (act === 'tier') upd(it.id, { tier: TIERS[(tierOf(it.tier).rank + 1) % TIERS.length].id });
+  else if (act === 'bought') {
+    upd(it.id, { purchased: true, boughtAt: Date.now() }).then(ok => {
+      if (!ok) return;
+      const price = Number(it.price) || 0, acts = [];
+      if (price > 0 && cfg().saved > 0) acts.push({ label: 'Take ' + money(Math.min(price, cfg().saved)) + ' out of savings', fn: () => {
+        const next = Object.assign({}, cfg(), { saved: Math.max(0, cfg().saved - price) }); delete next.isDefault;
+        state.settings = next; run(() => store.setSettings(next)); renderAll();
+      }});
+      acts.push({ label: 'Undo', fn: () => upd(it.id, { purchased: false, boughtAt: null }) });
+      toast('Nice. Moved to “Got it”.', acts);
+    });
+  }
+  else if (act === 'unbuy') upd(it.id, { purchased: false, boughtAt: null });
+  else if (act === 'delete') {
+    if (btn.dataset.armed !== '1') {
+      btn.dataset.armed = '1'; btn.classList.add('armed'); btn.textContent = 'Really delete?';
+      setTimeout(() => { if (btn.isConnected) { btn.dataset.armed = ''; btn.classList.remove('armed'); btn.textContent = 'Delete'; } }, 3000);
+    } else run(() => store.deleteItem(it.id));
+  }
+});
+document.addEventListener('keydown', e => {
+  const g = e.target.closest && e.target.closest('.grip'); if (!g) return;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); nudge(g.closest('.item').dataset.id, e.key === 'ArrowUp' ? -1 : 1); }
+});
+$('#clearExamples').addEventListener('click', async () => {
+  const ex = state.items.filter(i => i.example);
+  for (const it of ex) await run(() => store.deleteItem(it.id));
+  toast('Examples cleared. Your list is all yours now.');
+});
+
+/* ---------- storage: local (no setup) ---------- */
+function seedData(){
+  const mk = (i, name, price, category, tier, size, color, notes) => ({ name, price, category, tier, size, color, notes, url: '', image: null, order: i * 1024, purchased: false, createdAt: i, example: true });
+  const items = {
+    ex1: mk(1, 'Vitamin C serum', 32, 'Beauty', 'need', '', '', 'Fragrance-free one'),
+    ex2: mk(2, 'Cream cable-knit cardigan', 78, 'Clothes', 'need', 'M', 'Oat', 'Check the returns policy'),
+    ex3: mk(3, 'White leather sneakers', 95, 'Shoes', 'want', '8', 'White', ''),
+    ex4: mk(4, 'Linen wide-leg trousers', 54, 'Clothes', 'want', '27', 'Sand', 'Wait for a sale'),
+    ex5: mk(5, 'Gold hoop earrings', 40, 'Accessories', 'want', '', 'Gold', ''),
+    ex6: mk(6, 'Mini shoulder bag', 64, 'Bags', 'want', '', 'Black', ''),
+    ex7: mk(7, 'Weekender duffel', 180, 'Bags', 'dream', '', 'Olive', 'Birthday idea')
+  };
+  items.ex8 = Object.assign(mk(9, 'Ribbed tank set', 28, 'Clothes', 'want', 'S', 'White', ''), { purchased: true, boughtAt: Date.now() - 3 * 86400000 });
+  return { items, settings: Object.assign(defaultSettings(), { perCheck: 150, saved: 40, example: true }) };
+}
+function makeLocalStore(){
+  const KEY = 'eves-wishlist-v1';
+  let data = null;
+  try { data = JSON.parse(localStorage.getItem(KEY)); } catch(e){}
+  if (!data || !data.items) data = seedData();
+  let onItems = null, onSettings = null;
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){ toast("This browser's storage is full, so that didn't save."); } };
+  const emit = () => {
+    if (onItems) onItems(Object.keys(data.items).map(k => Object.assign({}, data.items[k], { id: k })));
+    if (onSettings) onSettings(data.settings || null);
+  };
+  return {
+    mode: 'local',
+    onUser(cb){ cb({ local: true }); },
+    signOut(){}, signIn(){},
+    subscribe(a, b){ onItems = a; onSettings = b; emit(); return () => { onItems = onSettings = null; }; },
+    newId: () => 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    setItem(id, d){ data.items[id] = d; persist(); emit(); return Promise.resolve(); },
+    updateItem(id, d){ data.items[id] = Object.assign({}, data.items[id], d); persist(); emit(); return Promise.resolve(); },
+    deleteItem(id){ delete data.items[id]; persist(); emit(); return Promise.resolve(); },
+    setSettings(d){ data.settings = d; persist(); emit(); return Promise.resolve(); }
+  };
+}
+
+/* ---------- storage: cloud (Firebase) ---------- */
+async function makeCloudStore(fbConfig){
+  const base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const [A, Au, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+  const app = A.initializeApp(fbConfig);
+  const auth = Au.getAuth(app);
+  let db;
+  try { db = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); }
+  catch(e){ db = F.getFirestore(app); }
+  const writeFail = e => toast(failMsg(e));
+  Au.getRedirectResult(auth).catch(() => {});
+  return {
+    mode: 'cloud',
+    user: () => auth.currentUser,
+    onUser(cb){ Au.onAuthStateChanged(auth, cb); },
+    async signIn(){
+      const provider = new Au.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
+      try { await Au.signInWithPopup(auth, provider); }
+      catch(e){
+        if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') await Au.signInWithRedirect(auth, provider);
+        else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') throw e;
+      }
+    },
+    signOut: () => Au.signOut(auth),
+    subscribe(onItems, onSettings, onErr){
+      const u1 = F.onSnapshot(F.collection(db, 'items'), snap => onItems(snap.docs.map(d => Object.assign({}, d.data(), { id: d.id }))), onErr);
+      const u2 = F.onSnapshot(F.doc(db, 'settings', 'pay'), s => onSettings(s.exists() ? s.data() : null), onErr);
+      return () => { u1(); u2(); };
+    },
+    newId: () => F.doc(F.collection(db, 'items')).id,
+    // Writes are applied locally right away and sent when online, so we don't wait on the network.
+    setItem(id, d){ F.setDoc(F.doc(db, 'items', id), d).catch(writeFail); return Promise.resolve(); },
+    updateItem(id, d){ F.updateDoc(F.doc(db, 'items', id), d).catch(writeFail); return Promise.resolve(); },
+    deleteItem(id){ F.deleteDoc(F.doc(db, 'items', id)).catch(writeFail); return Promise.resolve(); },
+    setSettings(d){ F.setDoc(F.doc(db, 'settings', 'pay'), d).catch(writeFail); return Promise.resolve(); }
+  };
+}
+
+/* ---------- gate + boot ---------- */
+let unsub = null;
+function detach(){ if (unsub) { unsub(); unsub = null; } }
+function showGate(msg, button){
+  detach();
+  $('#app').hidden = true; $('#gate').hidden = false;
+  $('#gateMsg').textContent = msg;
+  const b = $('#gateBtn'); b.hidden = !button; if (button) b.textContent = button.label; b._fn = button ? button.fn : null;
+}
+function showApp(){ $('#gate').hidden = true; $('#app').hidden = false; }
+function attach(){
+  detach();
+  state.loaded = false; state.items = []; state.settings = null;
+  unsub = store.subscribe(
+    items => { state.items = items; state.loaded = true; renderAll(); },
+    s => { if (settingsDirty) return; state.settings = s; renderAll(); },
+    err => {
+      if (err && err.code === 'permission-denied') showGate("This Google account isn't on the list for Eve's Wishlist. Try a different account.", { label: 'Use a different account', fn: () => store.signOut() });
+      else { state.loaded = true; renderAll(); toast("Can't reach the server right now. Showing what's saved on this device."); }
+    }
+  );
+}
+$('#gateBtn').addEventListener('click', async () => {
+  const b = $('#gateBtn'); if (b._fn) { try { await b._fn(); } catch(e){ $('#gateMsg').textContent = "Sign-in didn't work: " + (e.code || 'unknown error') + ". Check the setup steps in the README."; } }
+});
+$('#signOut').addEventListener('click', () => store.signOut());
+
+$('#plan').open = window.matchMedia('(min-width: 920px)').matches;
+
+(async function boot(){
+  renderAll();
+  let fb = null;
+  try { const m = await import('./firebase-config.js'); fb = m.firebaseConfig; } catch(e){ fb = null; }
+  const configured = fb && fb.apiKey && !/PASTE|YOUR_|XXXX/i.test(fb.apiKey);
+  if (!configured) {
+    store = makeLocalStore();
+    $('#modeBanner').hidden = false;
+    showApp(); attach();
+    return;
+  }
+  showGate('Checking sign-in…', null);
+  try { store = await makeCloudStore(fb); }
+  catch(e){ showGate("Couldn't load the sync service. Check your connection and refresh.", null); return; }
+  store.onUser(user => {
+    if (user) {
+      $('#acctEmail').textContent = user.email || '';
+      $('#acct').hidden = false;
+      showApp(); attach();
+    } else {
+      $('#acct').hidden = true;
+      showGate('Sign in with Google to open your list.', { label: 'Sign in with Google', fn: () => store.signIn() });
+    }
+  });
+})();
+
+</script>
+</body>
+</html>

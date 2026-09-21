@@ -1,0 +1,15 @@
+// Already published in Firebase console > Firestore Database > Rules. Keep a copy here.
+// To change who has access, edit the two emails and Publish again.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'evesalazar1121@gmail.com',
+          'avacbrooks@gmail.com'
+        ];
+    }
+  }
+}
