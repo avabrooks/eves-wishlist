@@ -192,6 +192,13 @@ dialog::backdrop{background:rgba(67,38,54,.45)}
 .tiers input:focus-visible + label{outline:3px solid var(--accent);outline-offset:2px}
 .dlg-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
 .err{color:var(--danger);font-weight:700;font-size:.88rem;margin:0}
+.lk-row{display:flex;gap:8px}
+.lk-row .inp{flex:1;min-width:0}
+.lk-row .btn{white-space:nowrap;box-shadow:none}
+.status{font-size:.85rem;margin:0;color:var(--ink-2)}
+.status.ok{color:var(--mint-ink)}
+.status.warn{color:var(--butter-ink);background:var(--butter);border-radius:10px;padding:6px 10px}
+.status.err{color:var(--danger)}
 
 /* toast */
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:10px 14px 10px 18px;border-radius:999px;font-weight:700;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 32px);transition:opacity .2s,transform .2s;z-index:50;flex-wrap:wrap;justify-content:center}
@@ -285,6 +292,14 @@ img{max-width:100%}
   <form class="dlg" id="itemForm" novalidate>
     <h2 id="dlgTitle">Add something</h2>
     <div class="field">
+      <label for="f-url" id="urlLabel">Link to the store</label>
+      <div class="lk-row">
+        <input class="inp" id="f-url" type="url" inputmode="url" placeholder="Paste the product link">
+        <button class="btn small" type="button" id="lookupBtn" hidden>Fill it in</button>
+      </div>
+      <p class="status" id="lookupStatus" role="status" aria-live="polite" hidden></p>
+    </div>
+    <div class="field">
       <label for="f-name">What is it?</label>
       <input class="inp" id="f-name" maxlength="120" placeholder="e.g. Cream cable-knit cardigan" required>
     </div>
@@ -310,10 +325,6 @@ img{max-width:100%}
         <input class="inp" id="f-cat" list="catList" maxlength="30" placeholder="Clothes, Shoes, Beauty…">
         <datalist id="catList"></datalist>
       </div>
-    </div>
-    <div class="field">
-      <label for="f-url">Link to the store</label>
-      <input class="inp" id="f-url" type="url" inputmode="url" placeholder="Paste the product link">
     </div>
     <div class="grid2">
       <div class="field"><label for="f-size">Size</label><input class="inp" id="f-size" maxlength="30" placeholder="M, 8, 27…"></div>
@@ -351,7 +362,9 @@ const state = { items: [], settings: null, loaded: false, tab: 'list', cat: 'All
 const TIERS = [ {id:'need', label:'Need it', rank:0}, {id:'want', label:'Want it', rank:1}, {id:'dream', label:'Someday', rank:2} ];
 const tierOf = id => TIERS.find(t => t.id === id) || TIERS[1];
 let sortable = null;
-let draft = { dataUrl: null, removed: false, editing: null };
+let draft = { dataUrl: null, removed: false, editing: null, touched: new Set(), lastLookup: '' };
+let extractorUrl = '';
+let lookupToken = 0;
 
 /* ---------- helpers ---------- */
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -713,7 +726,8 @@ function setPhotoPreview(url){
   $('#photoClear').hidden = !safe;
 }
 function openDialog(item){
-  draft = { dataUrl: null, removed: false, editing: item || null };
+  draft = { dataUrl: null, removed: false, editing: item || null, touched: new Set(), lastLookup: item ? (item.url || '') : '' };
+  lookupToken++;
   $('#dlgTitle').textContent = item ? 'Edit this pick' : 'Add something';
   $('#f-name').value = item ? (item.name || '') : '';
   $('#f-price').value = item && item.price ? item.price : '';
@@ -726,10 +740,14 @@ function openDialog(item){
   $('#formErr').hidden = true;
   $('#saveBtn').disabled = false; $('#saveBtn').textContent = 'Save';
   setPhotoPreview(item ? item.image : '');
+  if (item) { ['f-name','f-price','f-cat','f-size','f-color'].forEach(id => { if ($('#' + id).value) draft.touched.add(id); }); if (item.image) draft.touched.add('photo'); }
+  $('#lookupBtn').hidden = !extractorUrl; $('#lookupBtn').disabled = false;
+  $('#urlLabel').textContent = extractorUrl ? 'Paste the link and we\'ll fill in the rest' : 'Link to the store';
+  setStatus('');
   if (!dlg.open) dlg.showModal();
-  $('#f-name').focus();
+  (extractorUrl && !item ? $('#f-url') : $('#f-name')).focus();
 }
-function closeDialog(){ dlg.close(); }
+function closeDialog(){ lookupToken++; dlg.close(); }
 
 async function shrink(file){
   const bmp = await createImageBitmap(file);
@@ -740,20 +758,90 @@ async function shrink(file){
   while (url.length > 300000 && q > 0.4) { q -= 0.12; url = c.toDataURL('image/jpeg', q); }
   return url;
 }
-async function takePhoto(file){
+async function takePhoto(file, quiet){
   const err = $('#formErr');
   try {
     draft.dataUrl = await shrink(file); draft.removed = false;
     setPhotoPreview(draft.dataUrl); err.hidden = true;
-  } catch(e){ err.hidden = false; err.textContent = "Couldn't read that photo. Try a JPG or PNG, or a screenshot."; }
+    return true;
+  } catch(e){
+    if (!quiet) { err.hidden = false; err.textContent = "Couldn't read that photo. Try a JPG or PNG, or a screenshot."; }
+    return false;
+  }
 }
 $('#photoPick').addEventListener('click', () => $('#f-photo').click());
-$('#f-photo').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) takePhoto(f); e.target.value = ''; });
-$('#photoClear').addEventListener('click', () => { draft.dataUrl = null; draft.removed = true; setPhotoPreview(''); });
+$('#f-photo').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) { draft.touched.add('photo'); takePhoto(f); } e.target.value = ''; });
+$('#photoClear').addEventListener('click', () => { draft.touched.add('photo'); draft.dataUrl = null; draft.removed = true; setPhotoPreview(''); });
 dlg.addEventListener('paste', e => {
   const files = (e.clipboardData && e.clipboardData.files) || [];
-  for (let i = 0; i < files.length; i++) if (/^image\//.test(files[i].type)) { e.preventDefault(); takePhoto(files[i]); break; }
+  for (let i = 0; i < files.length; i++) if (/^image\//.test(files[i].type)) { e.preventDefault(); draft.touched.add('photo'); takePhoto(files[i]); break; }
 });
+/* ---------- fill in from a product link ---------- */
+function setStatus(msg, kind){
+  const el = $('#lookupStatus');
+  el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (kind ? ' ' + kind : '');
+}
+['f-name','f-price','f-cat','f-size','f-color'].forEach(id => $('#' + id).addEventListener('input', () => draft.touched.add(id)));
+
+const CATEGORY_WORDS = [
+  ['Shoes', /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|flats|pumps|slides|mules|clogs|trainers)\b/i],
+  ['Bags', /\b(bags?|purse|tote|backpack|clutch|wallet|crossbody|satchel|duffel|handbag)\b/i],
+  ['Accessories', /\b(earrings?|necklace|bracelet|rings?|watch|sunglasses|scarf|belt|hat|beanie|hair clip|jewelry|anklet)\b/i],
+  ['Beauty', /\b(serum|moisturi[sz]er|lipstick|lip gloss|mascara|perfume|fragrance|shampoo|conditioner|foundation|concealer|blush|skincare|cleanser|sunscreen|makeup|nail polish|eyeshadow)\b/i],
+  ['Home', /\b(candle|blanket|pillow|lamp|vase|mug|towel|rug|throw|bedding|sheets|diffuser)\b/i],
+  ['Clothes', /\b(dress|top|tee|t-shirt|shirt|jeans|pants|trousers|skirt|sweater|cardigan|jacket|coat|hoodie|shorts|blouse|jumpsuit|romper|leggings|bodysuit|tank|set|pajamas|robe|blazer|vest|sweatshirt)\b/i]
+];
+function guessCategory(text){ for (const [cat, re] of CATEGORY_WORDS) if (re.test(text)) return cat; return ''; }
+
+async function autofill(force){
+  if (!extractorUrl) return;
+  const raw = $('#f-url').value.trim(); if (!raw) return;
+  const url = safeUrl(raw);
+  if (!url) { setStatus("That link doesn't look right. Paste the full product address.", 'err'); return; }
+  if (!force && url === draft.lastLookup) return;
+  draft.lastLookup = url;
+  const token = ++lookupToken, btn = $('#lookupBtn');
+  setStatus('Looking it up…'); btn.disabled = true;
+  try {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch(extractorUrl + '/?url=' + encodeURIComponent(url), { signal: ctrl.signal });
+    clearTimeout(to);
+    const j = await res.json();
+    if (token !== lookupToken) return;
+    if (!j.ok) {
+      setStatus(j.reason === 'blocked' ? "That shop doesn't let us read its page, so fill in the details yourself." :
+                j.reason === 'not_found' ? "That link didn't open a page. Double-check it." :
+                "Couldn't find product details on that page. Fill them in yourself.", 'warn');
+      return;
+    }
+    const filled = [], set = (id, label, v) => { if (v !== '' && v != null && !draft.touched.has(id)) { $('#' + id).value = v; filled.push(label); } };
+    set('f-name', 'name', j.title || '');
+    set('f-price', 'price', j.price || '');
+    set('f-color', 'color', j.color || '');
+    set('f-cat', 'category', guessCategory((j.title || '') + ' ' + url));
+    if (j.image && !draft.touched.has('photo')) {
+      try {
+        const ir = await fetch(extractorUrl + '/img?url=' + encodeURIComponent(j.image));
+        if (!ir.ok) throw new Error('img');
+        const blob = await ir.blob();
+        if (token !== lookupToken) return;
+        if (await takePhoto(blob, true)) filled.push('photo');
+      } catch(e){ /* photo is optional */ }
+    }
+    const site = j.site || host(url);
+    let msg = filled.length ? 'Filled in ' + filled.join(', ') + (site ? ' from ' + site : '') + '. Check it looks right, then pick a size.' : 'Nothing new to fill in.';
+    if (!j.price && !draft.touched.has('f-price')) msg += " Couldn't find the price, so add it yourself.";
+    if (j.price && j.currency && j.currency !== 'USD') msg += ' The price on that page is in ' + j.currency + '.';
+    setStatus(msg, j.price || filled.length ? 'ok' : 'warn');
+  } catch(e){
+    if (token === lookupToken) setStatus("Couldn't reach the lookup service. Fill in the details yourself.", 'warn');
+  } finally { if (token === lookupToken) btn.disabled = false; }
+}
+$('#f-url').addEventListener('paste', () => setTimeout(() => autofill(false), 0));
+$('#f-url').addEventListener('change', () => autofill(false));
+$('#f-url').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); autofill(true); } });
+$('#lookupBtn').addEventListener('click', () => autofill(true));
+
 $('#cancelBtn').addEventListener('click', closeDialog);
 dlg.addEventListener('click', e => { if (e.target === dlg) closeDialog(); });
 
@@ -960,7 +1048,7 @@ $('#plan').open = window.matchMedia('(min-width: 920px)').matches;
 (async function boot(){
   renderAll();
   let fb = null;
-  try { const m = await import('./firebase-config.js'); fb = m.firebaseConfig; } catch(e){ fb = null; }
+  try { const m = await import('./firebase-config.js'); fb = m.firebaseConfig; extractorUrl = String(m.extractorUrl || '').replace(/\/+$/, ''); } catch(e){ fb = null; }
   const configured = fb && fb.apiKey && !/PASTE|YOUR_|XXXX/i.test(fb.apiKey);
   if (!configured) {
     store = makeLocalStore();

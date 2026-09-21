@@ -8,3 +8,7 @@ export const firebaseConfig = {
   messagingSenderId: "934296360042",
   appId: "1:934296360042:web:d9a9f6f381b05ac6eba613"
 };
+
+// Link reader (Cloudflare Worker). Paste its address here so pasting a product link fills in the details.
+// Leave it empty to turn auto-fill off.
+export const extractorUrl = "https://wishlist-fetch.avacbrooks.workers.dev";

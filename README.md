@@ -67,10 +67,24 @@ Open the site, sign in with Google, and:
 
 Her list syncs between devices, and it keeps working briefly without a connection.
 
+## Auto-fill from a product link (optional)
+
+Pasting a product link into "Add something" fills in the name, price, color and photo when the shop publishes
+them. This uses a tiny free helper (`worker.js`) running on Cloudflare Workers.
+
+1. Create a free Cloudflare account (no card needed), then **Workers & Pages > Create > Create Worker**.
+2. Name it `wishlist-fetch` and **Deploy**, then **Edit code**, replace everything with the contents of `worker.js`, and **Deploy**.
+3. Copy the worker's address (it ends in `.workers.dev`) into `extractorUrl` in `firebase-config.js`.
+4. If you later use your own domain, add it to `ALLOWED_ORIGINS` at the top of `worker.js`.
+
+Some shops (Amazon is the usual one) block automated readers. For those, the form stays blank and she types the details in.
+Size can't be read from a link, so she picks that herself.
+
 ## Files
 
 - `index.html` is the whole app.
 - `firebase-config.js` is where the Firebase settings go.
+- `worker.js` is the helper that reads product links (runs on Cloudflare, not on GitHub).
 - `firestore.rules` is the security rule to paste into Firebase (not used by the site itself).
 - `manifest.webmanifest` and the `.png` files make it installable on a phone.
 
