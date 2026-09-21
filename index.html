@@ -199,6 +199,10 @@ dialog::backdrop{background:rgba(67,38,54,.45)}
 .status.ok{color:var(--mint-ink)}
 .status.warn{color:var(--butter-ink);background:var(--butter);border-radius:10px;padding:6px 10px}
 .status.err{color:var(--danger)}
+.hint a{color:var(--accent-soft-ink);font-weight:800}
+.tech{font-size:.78rem;color:var(--ink-2)}
+.tech summary{cursor:pointer}
+.tech pre{white-space:pre-wrap;word-break:break-all;margin:6px 0 0;user-select:all}
 
 /* toast */
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:10px 14px 10px 18px;border-radius:999px;font-weight:700;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 32px);transition:opacity .2s,transform .2s;z-index:50;flex-wrap:wrap;justify-content:center}
@@ -220,7 +224,6 @@ img{max-width:100%}
   <header class="top">
     <div>
       <h1>Eve's Wishlist</h1>
-      <p class="sub">Rank what you want, then see exactly which paycheck gets you there.</p>
     </div>
     <button class="btn" id="addBtn" type="button">+ Add something</button>
   </header>
@@ -298,6 +301,8 @@ img{max-width:100%}
         <button class="btn small" type="button" id="lookupBtn" hidden>Fill it in</button>
       </div>
       <p class="status" id="lookupStatus" role="status" aria-live="polite" hidden></p>
+      <p class="hint" id="btnHint" hidden>Some shops hide their pages from lookups. The <a href="add-button.html" target="_blank" rel="noopener">Add button</a> fills everything in from the page you're looking at.</p>
+      <details class="tech" id="lookupDebug" hidden><summary>Technical details</summary><pre id="lookupDebugText"></pre></details>
     </div>
     <div class="field">
       <label for="f-name">What is it?</label>
@@ -777,9 +782,11 @@ dlg.addEventListener('paste', e => {
   for (let i = 0; i < files.length; i++) if (/^image\//.test(files[i].type)) { e.preventDefault(); draft.touched.add('photo'); takePhoto(files[i]); break; }
 });
 /* ---------- fill in from a product link ---------- */
-function setStatus(msg, kind){
+function setStatus(msg, kind, debug){
   const el = $('#lookupStatus');
   el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (kind ? ' ' + kind : '');
+  $('#btnHint').hidden = kind !== 'warn';
+  $('#lookupDebug').hidden = !debug; $('#lookupDebugText').textContent = debug || '';
 }
 ['f-name','f-price','f-cat','f-size','f-color'].forEach(id => $('#' + id).addEventListener('input', () => draft.touched.add(id)));
 
@@ -806,6 +813,42 @@ function nameFromUrl(url){
 }
 function guessCategory(text){ for (const [cat, re] of CATEGORY_WORDS) if (re.test(text)) return cat; return ''; }
 
+/* Put looked-up details into the open form. Only fills fields she hasn't typed in herself. */
+async function fetchImage(src){
+  const tryFetch = async (u) => {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 9000);
+    try { const r = await fetch(u, { signal: ctrl.signal }); if (!r.ok) return null; const b = await r.blob(); return /^image\//.test(b.type) ? b : null; }
+    catch(e){ return null; } finally { clearTimeout(to); }
+  };
+  // Straight from the shop's image server when it allows it, otherwise through our helper.
+  let blob = await tryFetch(src);
+  if (!blob && extractorUrl) blob = await tryFetch(extractorUrl + '/img?url=' + encodeURIComponent(src));
+  return blob;
+}
+async function applyInfo(info, token){
+  const filled = [], set = (id, label, v) => { if (v !== '' && v != null && !draft.touched.has(id)) { $('#' + id).value = v; filled.push(label); } };
+  set('f-name', 'name', info.title || nameFromUrl(info.url || ''));
+  set('f-price', 'price', info.price || '');
+  set('f-color', 'color', info.color || '');
+  set('f-cat', 'category', guessCategory((info.title || '') + ' ' + (info.url || '')));
+  if (info.image && !draft.touched.has('photo')) {
+    const blob = await fetchImage(info.image);
+    if (token !== lookupToken) return filled;
+    if (blob && await takePhoto(blob, true)) filled.push('photo');
+  }
+  return filled;
+}
+function summarize(filled, url, info){
+  const site = info.site || host(url);
+  let msg = filled.length ? 'Filled in ' + filled.join(', ') + (site ? ' from ' + site : '') + '. Check it looks right, then pick a size.' : 'Nothing new to fill in.';
+  const missing = [];
+  if (!info.price && !draft.touched.has('f-price')) missing.push('price');
+  if (!filled.includes('photo') && !draft.touched.has('photo') && !draft.dataUrl && !(draft.editing && draft.editing.image)) missing.push('photo');
+  if (missing.length) msg += " Couldn't get the " + missing.join(' or ') + ', so add ' + (missing.length > 1 ? 'those' : 'that') + ' yourself.';
+  if (info.price && info.currency && info.currency !== 'USD') msg += ' The price on that page is in ' + info.currency + '.';
+  return { msg, kind: missing.length ? 'warn' : 'ok' };
+}
+
 async function autofill(force){
   if (!extractorUrl) return;
   const raw = $('#f-url').value.trim(); if (!raw) return;
@@ -816,7 +859,7 @@ async function autofill(force){
   const token = ++lookupToken, btn = $('#lookupBtn');
   setStatus('Looking it up…'); btn.disabled = true;
   try {
-    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 15000);
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 20000);
     const res = await fetch(extractorUrl + '/?url=' + encodeURIComponent(url), { signal: ctrl.signal });
     clearTimeout(to);
     const j = await res.json();
@@ -828,33 +871,56 @@ async function autofill(force){
       if (cat && !draft.touched.has('f-cat')) { $('#f-cat').value = cat; got.push('category'); }
       const why = j.reason === 'not_found' ? "That link didn't open a page. Double-check it." :
         (j.reason === 'blocked' ? "That shop doesn't let us read its page." : "That shop's page didn't share its details.");
-      setStatus(got.length ? why + ' We filled in the ' + got.join(' and ') + ' from the link. Add the price and photo yourself.' : why + ' Fill in the details yourself.', 'warn');
-      if (j.debug) console.info('link lookup debug', j.reason, j.debug, j.debug2);
+      setStatus(got.length ? why + ' We filled in the ' + got.join(' and ') + ' from the link. Add the price and photo yourself.' : why + ' Fill in the details yourself.', 'warn',
+        JSON.stringify({ reason: j.reason, first: j.debug, second: j.debug2 }));
       return;
     }
-    const filled = [], set = (id, label, v) => { if (v !== '' && v != null && !draft.touched.has(id)) { $('#' + id).value = v; filled.push(label); } };
-    set('f-name', 'name', j.title || nameFromUrl(url));
-    set('f-price', 'price', j.price || '');
-    set('f-color', 'color', j.color || '');
-    set('f-cat', 'category', guessCategory((j.title || '') + ' ' + url));
-    if (j.image && !draft.touched.has('photo')) {
-      try {
-        const ir = await fetch(extractorUrl + '/img?url=' + encodeURIComponent(j.image));
-        if (!ir.ok) throw new Error('img');
-        const blob = await ir.blob();
-        if (token !== lookupToken) return;
-        if (await takePhoto(blob, true)) filled.push('photo');
-      } catch(e){ /* photo is optional */ }
-    }
-    const site = j.site || host(url);
-    let msg = filled.length ? 'Filled in ' + filled.join(', ') + (site ? ' from ' + site : '') + '. Check it looks right, then pick a size.' : 'Nothing new to fill in.';
-    if (!j.price && !draft.touched.has('f-price')) msg += " Couldn't find the price, so add it yourself.";
-    if (j.price && j.currency && j.currency !== 'USD') msg += ' The price on that page is in ' + j.currency + '.';
-    setStatus(msg, j.price || filled.length ? 'ok' : 'warn');
+    const filled = await applyInfo({ title: j.title, price: j.price, color: j.color, image: j.image, url, site: j.site, currency: j.currency }, token);
+    if (token !== lookupToken) return;
+    const r = summarize(filled, url, j);
+    setStatus(r.msg, r.kind);
   } catch(e){
     if (token === lookupToken) setStatus("Couldn't reach the lookup service. Fill in the details yourself.", 'warn');
   } finally { if (token === lookupToken) btn.disabled = false; }
 }
+
+/* ---------- the Add button hands a product over through the page address ---------- */
+function readCapture(){
+  try {
+    const m = location.hash.match(/^#add=([A-Za-z0-9_-]+)$/); if (!m) return null;
+    const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
+    const j = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+    return (j && typeof j === 'object') ? j : null;
+  } catch(e){ return null; }
+}
+function stashCapture(){
+  const j = readCapture(); if (!j) return;
+  try { sessionStorage.setItem('pendingAdd', JSON.stringify(j)); } catch(e){ window.__pendingAdd = j; }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+}
+function maybeOpenPending(){
+  if (!state.loaded) return;
+  let j = null;
+  try { const t = sessionStorage.getItem('pendingAdd'); if (t) { sessionStorage.removeItem('pendingAdd'); j = JSON.parse(t); } } catch(e){}
+  if (!j && window.__pendingAdd) { j = window.__pendingAdd; window.__pendingAdd = null; }
+  if (j) openFromCapture(j);
+}
+async function openFromCapture(j){
+  const url = safeUrl(String(j.u || ''));
+  openDialog(null);
+  draft.lastLookup = url;
+  $('#f-url').value = url;
+  const token = ++lookupToken;
+  setStatus('Filling in from the page…');
+  const price = Number(j.p) > 0 ? Number(j.p) : '';
+  const info = { title: String(j.t || '').slice(0, 140), price, color: String(j.c || '').slice(0, 30), image: safeUrl(String(j.i || '')), url, currency: String(j.k || '').slice(0, 3).toUpperCase() };
+  const filled = await applyInfo(info, token);
+  if (token !== lookupToken) return;
+  const r = summarize(filled, url, info);
+  setStatus(r.msg, r.kind);
+}
+window.addEventListener('hashchange', () => { stashCapture(); maybeOpenPending(); });
 $('#f-url').addEventListener('paste', () => setTimeout(() => autofill(false), 0));
 $('#f-url').addEventListener('change', () => autofill(false));
 $('#f-url').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); autofill(true); } });
@@ -1048,7 +1114,7 @@ function attach(){
   detach();
   state.loaded = false; state.items = []; state.settings = null;
   unsub = store.subscribe(
-    items => { state.items = items; state.loaded = true; renderAll(); },
+    items => { state.items = items; state.loaded = true; renderAll(); maybeOpenPending(); },
     s => { if (settingsDirty) return; state.settings = s; renderAll(); },
     err => {
       if (err && err.code === 'permission-denied') showGate("This Google account isn't on the list for Eve's Wishlist. Try a different account.", { label: 'Use a different account', fn: () => store.signOut() });
@@ -1064,6 +1130,7 @@ $('#signOut').addEventListener('click', () => store.signOut());
 $('#plan').open = window.matchMedia('(min-width: 920px)').matches;
 
 (async function boot(){
+  stashCapture();
   renderAll();
   let fb = null;
   try { const m = await import('./firebase-config.js'); fb = m.firebaseConfig; extractorUrl = String(m.extractorUrl || '').replace(/\/+$/, ''); } catch(e){ fb = null; }
